@@ -1,3 +1,18 @@
+# Branch experimental GTK 4
+
+Esta branch `feature/gtk4-ui` migra a interface para GTK 4. A versão Tkinter permanece na branch `main`. Para executar: `python3 app.py`.
+
+Dependências de execução:
+- Arch: `sudo pacman -S python-gobject gtk4`
+- Ubuntu/Debian: `sudo apt install python3-gi python3-gi-cairo gir1.2-gtk-4.0`
+- Fedora: `sudo dnf install python3-gobject gtk4`
+
+`legenda/ui.py` contém a interface GTK; `legenda/service.py` concentra busca/download sem depender de widgets. A interface Tkinter foi removida desta branch; seu histórico permanece em `main`. Não há fallback silencioso para Tkinter.
+
+Estado: testes unitários dos arquivos, API e serviço, mais testes gráficos GTK executados no CI. O workflow `gtk.yml` prepara um AppImage GTK em Ubuntu 22.04, com testes da aplicação e do binário. Sua execução remota e a validação visual ainda estão pendentes; os builds GTK de Windows/macOS ainda não foram adaptados. Os workflows abaixo foram herdados da versão Tkinter e ainda não comprovam builds GTK funcionais.
+
+---
+
 # LEGENDA / Linux
 
 Interface em grafite, bordas finas e botões retos. Python 3 e Tkinter, sem pacotes pip.
@@ -75,3 +90,7 @@ git push origin v1.0.0
 ```
 
 Após todos os builds e testes Linux passarem, o job `release` publica uma GitHub Release com AppImage, pacote Linux, ZIP Windows, pacote macOS e `SHA256SUMS.txt`. Ele usa o token automático do Actions, sem precisar cadastrar um token pessoal. A release é preparada como rascunho e publicada somente depois do upload completo. Uma nova tentativa pode continuar um rascunho; versões já publicadas não são sobrescritas. Pushes comuns em `main` geram apenas artefatos de teste, sem criar uma versão pública.
+
+Na interface GTK, abra **Conta → Salvar no cofre** para lembrar chave API, usuário e senha. Na próxima abertura, o aplicativo recupera os dados pelo Secret Service do desktop. **Esquecer credenciais salvas** apaga os dados do cofre e limpa os campos. Não há fallback para arquivo em texto puro. Instale `python-keyring` no Arch ou `python3-keyring` no Ubuntu/Debian e mantenha um serviço compatível (como GNOME Keyring) disponível/desbloqueado. Falhas do cofre são exibidas na interface. O teste automatizado usa um cofre simulado; a integração real depende da sessão de desktop.
+
+Botões e lista de resultados usam cursor `pointer` ao passar o mouse.
