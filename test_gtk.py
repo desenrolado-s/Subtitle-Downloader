@@ -2,7 +2,12 @@
 import unittest
 from unittest.mock import patch
 from uuid import uuid4
-from legenda.ui import App, Gtk, Gdk
+try:
+    from legenda.ui import App, Gtk, Gdk
+except ModuleNotFoundError as error:
+    if error.name != 'gi':
+        raise
+    raise unittest.SkipTest('GTK integration tests require PyGObject')
 
 Gtk.init()
 
