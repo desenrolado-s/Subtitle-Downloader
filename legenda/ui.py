@@ -8,7 +8,7 @@ gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, Gdk, GLib
 from . import service, credentials
 
-CSS = b'''
+CSS = '''
 window { background: #111315; color: #f4f4f0; }
 headerbar { background: #111315; box-shadow: none; border-bottom: 1px solid #777; }
 button, entry { border-radius: 0; border: 1px solid #aaa; padding: 10px 14px; background: transparent; color: #f4f4f0; }
@@ -23,6 +23,18 @@ scrolledwindow overshoot.top { background-image: radial-gradient(ellipse at cent
 scrolledwindow overshoot.bottom { background-image: radial-gradient(ellipse at center bottom, alpha(#f4f4f0, 0.22), transparent); }
 '''
 
+def _load_css(provider, css_data):
+    text = css_data.decode('utf-8') if isinstance(css_data, bytes) else css_data
+    if hasattr(provider, 'load_from_string'):
+        provider.load_from_string(text)
+        return
+    for args in [(text,), (text.encode('utf-8'),), (text, len(text.encode('utf-8'))), (text.encode('utf-8'), len(text.encode('utf-8')))]:
+        try:
+            provider.load_from_data(*args)
+            return
+        except (TypeError, ValueError):
+            continue
+
 class App(Gtk.Application):
     def __init__(self, smoke=False):
         super().__init__(application_id='io.github.desenrolado_s.Legenda')
@@ -30,6 +42,8 @@ class App(Gtk.Application):
         self.video = None
         self.results = []
         self.busy = False
+        if self.smoke:
+            GLib.timeout_add(3000, lambda: (self.quit(), False)[1])
 
     def do_activate(self):
         if getattr(self, 'window', None):
@@ -38,7 +52,7 @@ class App(Gtk.Application):
         self.window = Gtk.ApplicationWindow(application=self, title='LEGENDA')
         self.window.set_default_size(1000, 760)
         css = Gtk.CssProvider()
-        css.load_from_data(CSS, len(CSS))
+        _load_css(css, CSS)
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         header = Gtk.HeaderBar()
         header.pack_end(self.button('Conta', self.settings))

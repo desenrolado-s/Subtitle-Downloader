@@ -65,9 +65,11 @@ jobs:
           .venv-macos/bin/python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda --add-binary "$GTK_DYLIB:." --hidden-import=gi.repository.Gtk --hidden-import=gi.repository.Gdk --hidden-import=gi.repository.Gio --hidden-import=gi.repository.GLib app.py
       - name: Smoke test GTK executable
         if: runner.os == 'Linux'
+        timeout-minutes: 2
         run: dbus-run-session -- xvfb-run -a dist/Legenda/Legenda --smoke-test
       - name: Smoke test macOS executable
         if: runner.os == 'macOS'
+        timeout-minutes: 2
         run: env -i HOME="$HOME" TMPDIR="$RUNNER_TEMP" PATH=/usr/bin:/bin:/usr/sbin:/sbin dist/Legenda/Legenda --smoke-test
       - name: Archive Linux
         if: runner.os == 'Linux'
