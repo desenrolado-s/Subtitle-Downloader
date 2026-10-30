@@ -38,7 +38,7 @@ class App(Gtk.Application):
         self.window = Gtk.ApplicationWindow(application=self, title='LEGENDA')
         self.window.set_default_size(1000, 760)
         css = Gtk.CssProvider()
-        css.load_from_data(CSS)
+        css.load_from_data(CSS, len(CSS))
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         header = Gtk.HeaderBar()
         header.pack_end(self.button('Conta', self.settings))
