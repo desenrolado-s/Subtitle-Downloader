@@ -1,6 +1,7 @@
 """GTK integration checks; run with a graphical display or xvfb-run."""
 import unittest
 from unittest.mock import patch
+from uuid import uuid4
 from legenda.ui import App, Gtk, Gdk
 
 Gtk.init()
@@ -9,6 +10,9 @@ Gtk.init()
 class GtkTests(unittest.TestCase):
     def setUp(self):
         self.app = App()
+        # quit() does not unregister apps registered without running their loop.
+        # Keep real D-Bus registration, but isolate each test's exported objects.
+        self.app.set_application_id(f'io.github.desenrolado_s.Legenda.Test{uuid4().hex}')
         self.vault_patch = patch("legenda.ui.credentials.load", return_value=None)
         self.vault_patch.start()
         self.addCleanup(self.vault_patch.stop)
