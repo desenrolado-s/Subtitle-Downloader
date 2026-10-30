@@ -6,7 +6,7 @@ from pathlib import Path
 import gi
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, Gdk, GLib
-from . import service
+from . import service, credentials
 
 CSS = b'''
 window { background: #111315; color: #f4f4f0; }
@@ -62,6 +62,7 @@ class App(Gtk.Application):
         self.video_label = self.label('Nenhum vídeo vinculado', 'muted')
         self.body.append(self.video_label)
         self.list = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
+        self.list.set_cursor_from_name('pointer')
         scroll = Gtk.ScrolledWindow(vexpand=True)
         scroll.set_child(self.list)
         self.body.append(scroll)
@@ -71,6 +72,15 @@ class App(Gtk.Application):
         self.key = Gtk.Entry(text=os.getenv('OPENSUBTITLES_API_KEY', ''), visibility=False)
         self.user = Gtk.Entry(text=os.getenv('OPENSUBTITLES_USERNAME', ''))
         self.password = Gtk.Entry(visibility=False)
+        if not self.smoke:
+            try:
+                saved = credentials.load()
+                if saved:
+                    self.key.set_text(saved['key'])
+                    self.user.set_text(saved['user'])
+                    self.password.set_text(saved['password'])
+            except Exception:
+                self.status.set_text('Cofre indisponível. Você pode informar as credenciais em Conta.')
         self.window.present()
         if self.smoke:
             GLib.timeout_add(300, lambda: (self.quit(), False)[1])
@@ -83,6 +93,7 @@ class App(Gtk.Application):
 
     def button(self, text, callback):
         button = Gtk.Button(label=text)
+        button.set_cursor_from_name('pointer')
         button.connect('clicked', lambda _: callback())
         return button
 
@@ -97,11 +108,36 @@ class App(Gtk.Application):
         for title, widget in [('Chave API', self.key), ('Usuário', self.user), ('Senha', self.password)]:
             box.append(self.label(title))
             box.append(widget)
-        box.append(self.label('Credenciais mantidas apenas nesta sessão.', 'muted'))
+        self.account_status = self.label('Salve para lembrar a conta na próxima abertura.', 'muted')
+        box.append(self.account_status)
+        box.append(self.button('Salvar no cofre', self.save_credentials))
+        box.append(self.button('Esquecer credenciais salvas', self.forget_credentials))
         box.append(self.button('Concluído', self.account.hide))
         self.account.set_child(box)
         self.account.connect('close-request', lambda w: (w.hide(), True)[1])
         self.account.present()
+
+    def save_credentials(self):
+        values = (self.key.get_text().strip(), self.user.get_text().strip(), self.password.get_text())
+        if not all(values):
+            self.account_status.set_text('Preencha chave API, usuário e senha.')
+            return
+        try:
+            credentials.save(*values)
+        except Exception:
+            self.account_status.set_text('Não foi possível salvar. Desbloqueie o cofre Secret Service do sistema e tente novamente.')
+        else:
+            self.account_status.set_text('Credenciais salvas no cofre do sistema.')
+
+    def forget_credentials(self):
+        try:
+            credentials.forget()
+        except Exception:
+            self.account_status.set_text('Não foi possível remover as credenciais. Confira o cofre do sistema.')
+        else:
+            for widget in (self.key, self.user, self.password):
+                widget.set_text('')
+            self.account_status.set_text('Credenciais removidas do cofre e desta sessão.')
 
     def chooser(self, save, callback):
         self.dialog = Gtk.FileChooserNative(title='Salvar legenda' if save else 'Selecionar vídeo', transient_for=self.window, action=Gtk.FileChooserAction.SAVE if save else Gtk.FileChooserAction.OPEN)

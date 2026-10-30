@@ -9,6 +9,9 @@ Gtk.init()
 class GtkTests(unittest.TestCase):
     def setUp(self):
         self.app = App()
+        self.vault_patch = patch("legenda.ui.credentials.load", return_value=None)
+        self.vault_patch.start()
+        self.addCleanup(self.vault_patch.stop)
         self.app.register(None)
         self.app.activate()
         self.app.run_task = lambda work, done: done(work())

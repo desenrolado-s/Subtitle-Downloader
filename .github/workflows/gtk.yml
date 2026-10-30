@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install native GTK dependencies
-        run: sudo apt-get update && sudo apt-get install -y python3-gi python3-gi-cairo gir1.2-gtk-4.0 python3-venv xvfb xauth dbus-x11
+        run: sudo apt-get update && sudo apt-get install -y python3-gi python3-gi-cairo gir1.2-gtk-4.0 python3-venv python3-keyring xvfb xauth dbus-x11
       - name: Test GTK widgets and services
         run: dbus-run-session -- xvfb-run -a /usr/bin/python3 -m unittest discover -v
       - name: Open and close GTK application
@@ -24,7 +24,7 @@ jobs:
           /usr/bin/python3 -m venv --system-site-packages .venv
           .venv/bin/python -m pip install -r requirements-build.txt
       - name: Package GTK application
-        run: .venv/bin/python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda --hidden-import=gi.repository.Gtk --hidden-import=gi.repository.Gdk --hidden-import=gi.repository.Gio --hidden-import=gi.repository.GLib app.py
+        run: .venv/bin/python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda --hidden-import=keyring.backends.SecretService --hidden-import=gi.repository.Gtk --hidden-import=gi.repository.Gdk --hidden-import=gi.repository.Gio --hidden-import=gi.repository.GLib app.py
       - name: Test packaged GTK application
         timeout-minutes: 2
         run: dbus-run-session -- xvfb-run -a dist/Legenda/Legenda --smoke-test
