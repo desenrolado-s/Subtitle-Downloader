@@ -57,8 +57,10 @@ jobs:
           BREW_PYTHON="$(brew --prefix python@3.14)/bin/python3.14"
           test -x "$BREW_PYTHON"
           "$BREW_PYTHON" -c 'import gi; gi.require_version("Gtk", "4.0"); from gi.repository import Gtk; print(Gtk.get_major_version(), Gtk.get_minor_version())'
-          "$BREW_PYTHON" -m pip install -r requirements-build.txt
-          "$BREW_PYTHON" -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda --hidden-import=gi.repository.Gtk --hidden-import=gi.repository.Gdk --hidden-import=gi.repository.Gio --hidden-import=gi.repository.GLib app.py
+          "$BREW_PYTHON" -m venv --system-site-packages .venv-macos
+          .venv-macos/bin/python -m pip install -r requirements-build.txt
+          .venv-macos/bin/python -c 'import gi; gi.require_version("Gtk", "4.0"); from gi.repository import Gtk; print("Bundler GTK", Gtk.get_major_version(), Gtk.get_minor_version())'
+          .venv-macos/bin/python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda --hidden-import=gi.repository.Gtk --hidden-import=gi.repository.Gdk --hidden-import=gi.repository.Gio --hidden-import=gi.repository.GLib app.py
       - name: Smoke test GTK executable
         if: runner.os == 'Linux'
         run: dbus-run-session -- xvfb-run -a dist/Legenda/Legenda --smoke-test
