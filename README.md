@@ -63,3 +63,15 @@ chmod +x Legenda-linux-x64.AppImage
 Se FUSE estiver indisponível, use `./Legenda-linux-x64.AppImage --appimage-extract-and-run`. O AppImage é x86_64 e tem como base Ubuntu 22.04/glibc 2.35; não se promete compatibilidade com distribuições anteriores, Alpine/musl ou Linux ARM. Windows e macOS continuam com pacotes próprios.
 
 Para produzir o AppImage, gere primeiro `dist/Legenda` no Ubuntu 22.04 e execute `bash scripts/build-appimage.sh`. O script baixa a versão `continuous` oficial do appimagetool; portanto essa ferramenta não está fixada por hash e o build não é inteiramente reprodutível.
+
+## Publicação automática de versões
+
+Envie uma tag `v*` para iniciar builds e publicação automática. Exemplo para a primeira versão (use um número ainda não publicado):
+
+```sh
+git push origin main
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Após todos os builds e testes Linux passarem, o job `release` publica uma GitHub Release com AppImage, pacote Linux, ZIP Windows, pacote macOS e `SHA256SUMS.txt`. Ele usa o token automático do Actions, sem precisar cadastrar um token pessoal. A release é preparada como rascunho e publicada somente depois do upload completo. Uma nova tentativa pode continuar um rascunho; versões já publicadas não são sobrescritas. Pushes comuns em `main` geram apenas artefatos de teste, sem criar uma versão pública.
