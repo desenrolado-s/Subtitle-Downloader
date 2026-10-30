@@ -24,7 +24,9 @@ jobs:
           /usr/bin/python3 -m venv --system-site-packages .venv
           .venv/bin/python -m pip install -r requirements-build.txt
       - name: Package GTK application
-        run: .venv/bin/python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda --hidden-import=keyring.backends.SecretService --hidden-import=gi.repository.Gtk --hidden-import=gi.repository.Gdk --hidden-import=gi.repository.Gio --hidden-import=gi.repository.GLib app.py
+        run: |
+          .venv/bin/python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda --hidden-import=keyring.backends.SecretService --hidden-import=gi.repository.Gtk --hidden-import=gi.repository.Gdk --hidden-import=gi.repository.Gio --hidden-import=gi.repository.GLib app.py
+          rm -f dist/Legenda/libglib-2.0.so* dist/Legenda/libgobject-2.0.so* dist/Legenda/libgio-2.0.so* dist/Legenda/libgmodule-2.0.so* dist/Legenda/libgirepository-*.so*
       - name: Test packaged GTK application
         timeout-minutes: 2
         run: dbus-run-session -- xvfb-run -a dist/Legenda/Legenda --smoke-test

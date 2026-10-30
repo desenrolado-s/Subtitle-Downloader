@@ -4,6 +4,11 @@ cd "$(dirname "$0")/.."
 test -x dist/Legenda/Legenda
 mkdir -p build/Legenda.AppDir/usr/Legenda
 cp -a dist/Legenda/. build/Legenda.AppDir/usr/Legenda/
+rm -f build/Legenda.AppDir/usr/Legenda/libglib-2.0.so* \
+      build/Legenda.AppDir/usr/Legenda/libgobject-2.0.so* \
+      build/Legenda.AppDir/usr/Legenda/libgio-2.0.so* \
+      build/Legenda.AppDir/usr/Legenda/libgmodule-2.0.so* \
+      build/Legenda.AppDir/usr/Legenda/libgirepository-*.so*
 cp packaging/linux/legenda.desktop packaging/linux/legenda.png build/Legenda.AppDir/
 cp packaging/linux/legenda.png build/Legenda.AppDir/.DirIcon
 test -s build/Legenda.AppDir/legenda.png
@@ -11,6 +16,10 @@ test -s build/Legenda.AppDir/.DirIcon
 cat > build/Legenda.AppDir/AppRun <<'RUN'
 #!/bin/sh
 HERE="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+for p in /usr/lib64/girepository-1.0 /usr/lib/girepository-1.0 /usr/lib/x86_64-linux-gnu/girepository-1.0; do
+  [ -d "$p" ] && GI_TYPELIB_PATH="$p${GI_TYPELIB_PATH:+:$GI_TYPELIB_PATH}"
+done
+export GI_TYPELIB_PATH
 exec "$HERE/usr/Legenda/Legenda" "$@"
 RUN
 chmod +x build/Legenda.AppDir/AppRun

@@ -3,6 +3,13 @@ import os
 import re
 import threading
 from pathlib import Path
+
+for _path in ('/usr/lib64/girepository-1.0', '/usr/lib/girepository-1.0', '/usr/lib/x86_64-linux-gnu/girepository-1.0'):
+    if os.path.isdir(_path):
+        _current = os.environ.get('GI_TYPELIB_PATH', '')
+        if _path not in _current.split(os.pathsep):
+            os.environ['GI_TYPELIB_PATH'] = f'{_path}{os.pathsep}{_current}' if _current else _path
+
 import gi
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, Gdk, GLib
