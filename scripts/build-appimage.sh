@@ -4,11 +4,8 @@ cd "$(dirname "$0")/.."
 test -x dist/Legenda/Legenda
 mkdir -p build/Legenda.AppDir/usr/Legenda
 cp -a dist/Legenda/. build/Legenda.AppDir/usr/Legenda/
-rm -f build/Legenda.AppDir/usr/Legenda/libglib-2.0.so* \
-      build/Legenda.AppDir/usr/Legenda/libgobject-2.0.so* \
-      build/Legenda.AppDir/usr/Legenda/libgio-2.0.so* \
-      build/Legenda.AppDir/usr/Legenda/libgmodule-2.0.so* \
-      build/Legenda.AppDir/usr/Legenda/libgirepository-*.so*
+find build/Legenda.AppDir -name "libglib-2.0.so*" -o -name "libgobject-2.0.so*" -o -name "libgio-2.0.so*" -o -name "libgmodule-2.0.so*" -o -name "libgirepository-*.so*" | xargs -r rm -f
+rm -rf build/Legenda.AppDir/usr/Legenda/_internal/gio_modules build/Legenda.AppDir/usr/Legenda/gio_modules
 cp packaging/linux/legenda.desktop packaging/linux/legenda.png build/Legenda.AppDir/
 cp packaging/linux/legenda.png build/Legenda.AppDir/.DirIcon
 test -s build/Legenda.AppDir/legenda.png
