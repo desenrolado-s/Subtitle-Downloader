@@ -19,6 +19,8 @@ button.primary { background: #eee; color: #111; }
 list { background: transparent; }
 row { padding: 16px; border-bottom: 1px solid #444; }
 row:selected { background: #353b41; }
+scrolledwindow overshoot.top { background-image: radial-gradient(ellipse at center top, alpha(#f4f4f0, 0.22), transparent); }
+scrolledwindow overshoot.bottom { background-image: radial-gradient(ellipse at center bottom, alpha(#f4f4f0, 0.22), transparent); }
 '''
 
 class App(Gtk.Application):
@@ -64,6 +66,9 @@ class App(Gtk.Application):
         self.list = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
         self.list.set_cursor_from_name('pointer')
         scroll = Gtk.ScrolledWindow(vexpand=True)
+        scroll.set_kinetic_scrolling(True)
+        scroll.set_overlay_scrolling(True)
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroll.set_child(self.list)
         self.body.append(scroll)
         self.body.append(self.button('Baixar selecionada ↓', self.download))
