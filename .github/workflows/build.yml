@@ -57,9 +57,50 @@ jobs:
       - name: Archive macOS
         if: runner.os == 'macOS'
         run: tar -czf Legenda-${{ matrix.target }}.tar.gz -C dist Legenda.app
+      - name: Build Linux AppImage
+        if: runner.os == 'Linux'
+        run: bash scripts/build-appimage.sh
+      - name: Smoke test AppImage
+        if: runner.os == 'Linux'
+        timeout-minutes: 2
+        run: xvfb-run -a ./Legenda-linux-x64.AppImage --appimage-extract-and-run --smoke-test
       - uses: actions/upload-artifact@v4
         with:
           name: Legenda-${{ matrix.target }}
           path: Legenda-${{ matrix.target }}.*
           if-no-files-found: error
           retention-days: 30
+
+  linux-distros:
+    needs: build
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['ubuntu:22.04', 'ubuntu:24.04', 'debian:12', 'fedora:43']
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Legenda-linux-x64
+          path: artifacts
+      - name: Test AppImage in distribution
+        env:
+          DISTRO: ${{ matrix.image }}
+        run: |
+          docker run --rm -v "$PWD/artifacts:/artifacts:ro" "$DISTRO" sh -ec '
+            if command -v apt-get >/dev/null; then
+              apt-get update
+              apt-get install -y xvfb xauth libx11-6 libxext6 libxrender1 libxft2 libfontconfig1 ca-certificates
+            else
+              dnf install -y xorg-x11-server-Xvfb xorg-x11-xauth libX11 libXext libXrender libXft fontconfig ca-certificates tar
+            fi
+            cp /artifacts/Legenda-linux-x64.AppImage /tmp/Legenda.AppImage
+            chmod +x /tmp/Legenda.AppImage
+            cd /tmp
+            ./Legenda.AppImage --appimage-extract >/dev/null
+            Xvfb :99 -screen 0 1280x900x24 &
+            export DISPLAY=:99
+            sleep 2
+            timeout 60 ./squashfs-root/AppRun --smoke-test
+          '

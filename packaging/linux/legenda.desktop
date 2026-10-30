@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Legenda
+Comment=Search and download subtitles
+Exec=Legenda
+Icon=legenda
+Terminal=false
+Categories=AudioVideo;Video;

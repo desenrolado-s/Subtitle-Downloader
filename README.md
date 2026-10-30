@@ -48,3 +48,18 @@ python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda app
 ```
 
 Os testes locais passaram após a refatoração. A geração dos três pacotes e os testes gráficos precisam ser confirmados pela primeira execução do GitHub Actions; configurar o workflow não comprova que os builds remotos passaram.
+
+## AppImage e distribuições Linux
+
+O build Linux também gera `Legenda-linux-x64.AppImage`. O workflow testa a inicialização desse mesmo pacote em Ubuntu 22.04, Ubuntu 24.04, Debian 12 e Fedora 43, usando containers com display virtual. Isso verifica bibliotecas e abertura da janela, mas não substitui testes interativos em cada desktop. Os resultados desses jobs ainda precisam ser confirmados no GitHub.
+
+Após baixar o artefato e extrair o ZIP do GitHub:
+
+```sh
+chmod +x Legenda-linux-x64.AppImage
+./Legenda-linux-x64.AppImage
+```
+
+Se FUSE estiver indisponível, use `./Legenda-linux-x64.AppImage --appimage-extract-and-run`. O AppImage é x86_64 e tem como base Ubuntu 22.04/glibc 2.35; não se promete compatibilidade com distribuições anteriores, Alpine/musl ou Linux ARM. Windows e macOS continuam com pacotes próprios.
+
+Para produzir o AppImage, gere primeiro `dist/Legenda` no Ubuntu 22.04 e execute `bash scripts/build-appimage.sh`. O script baixa a versão `continuous` oficial do appimagetool; portanto essa ferramenta não está fixada por hash e o build não é inteiramente reprodutível.
