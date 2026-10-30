@@ -52,17 +52,18 @@ Testes automatizados: 8 aprovados, incluindo busca e download com respostas simu
 
 O workflow `.github/workflows/build.yml` roda em pushes para `main`, tags `v*`, pull requests e manualmente em **Actions → Test and build desktop apps → Run workflow**.
 
-Gera Linux x64 (Ubuntu 22.04), Windows x64 e macOS ARM64 (Apple Silicon). Cada job executa os testes, empacota com PyInstaller e abre/fecha o executável gerado como teste de inicialização. Os pacotes ficam em **Artifacts** da execução por 30 dias. Extraia todo o pacote antes de abrir: no Windows execute `Legenda.exe`, no Linux `Legenda`, no macOS `Legenda.app`. Python não precisa estar instalado na máquina de destino. Builds não são assinados nem notarizados; macOS Intel não está incluído nesta matriz.
+Gera Linux x64 (Ubuntu 22.04) com GTK 4. O workflow instala PyGObject/GTK, executa os testes gráficos em D-Bus e Xvfb, empacota com PyInstaller, testa a aplicação e produz um AppImage. O pacote fica em **Artifacts** por 30 dias. Builds GTK para Windows e macOS ainda não estão disponíveis.
 
-Para gerar localmente, no sistema de destino, com Python 3.12 e Tkinter:
+Para gerar localmente em Ubuntu 22.04 com GTK 4:
 
 ```sh
-python -m pip install -r requirements-build.txt
-python -m unittest discover -v
-python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda app.py
+sudo apt-get install python3-gi python3-gi-cairo gir1.2-gtk-4.0 python3-keyring
+/usr/bin/python3 -m venv --system-site-packages .venv
+.venv/bin/python -m pip install -r requirements-build.txt
+.venv/bin/python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda --hidden-import=gi.repository.Gtk --hidden-import=gi.repository.Gdk --hidden-import=gi.repository.Gio --hidden-import=gi.repository.GLib app.py
 ```
 
-Os testes locais passaram após a refatoração. A geração dos três pacotes e os testes gráficos precisam ser confirmados pela primeira execução do GitHub Actions; configurar o workflow não comprova que os builds remotos passaram.
+Os testes locais passaram após a refatoração. A geração do pacote Linux e os testes gráficos precisam ser confirmados pela execução do GitHub Actions.
 
 ## AppImage e distribuições Linux
 
@@ -89,7 +90,7 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-Após todos os builds e testes Linux passarem, o job `release` publica uma GitHub Release com AppImage, pacote Linux, ZIP Windows, pacote macOS e `SHA256SUMS.txt`. Ele usa o token automático do Actions, sem precisar cadastrar um token pessoal. A release é preparada como rascunho e publicada somente depois do upload completo. Uma nova tentativa pode continuar um rascunho; versões já publicadas não são sobrescritas. Pushes comuns em `main` geram apenas artefatos de teste, sem criar uma versão pública.
+Após os builds e testes Linux passarem, o job `release` publica uma GitHub Release com AppImage, pacote Linux e `SHA256SUMS.txt`. Ele usa o token automático do Actions, sem precisar cadastrar um token pessoal. A release é preparada como rascunho e publicada somente depois do upload completo. Uma nova tentativa pode continuar um rascunho; versões já publicadas não são sobrescritas. Pushes comuns em `main` geram apenas artefatos de teste, sem criar uma versão pública.
 
 Na interface GTK, abra **Conta → Salvar no cofre** para lembrar chave API, usuário e senha. Na próxima abertura, o aplicativo recupera os dados pelo Secret Service do desktop. **Esquecer credenciais salvas** apaga os dados do cofre e limpa os campos. Não há fallback para arquivo em texto puro. Instale `python-keyring` no Arch ou `python3-keyring` no Ubuntu/Debian e mantenha um serviço compatível (como GNOME Keyring) disponível/desbloqueado. Falhas do cofre são exibidas na interface. O teste automatizado usa um cofre simulado; a integração real depende da sessão de desktop.
 
