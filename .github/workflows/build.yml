@@ -30,7 +30,7 @@ jobs:
       - name: macOS GTK dependencies
         if: runner.os == 'macOS'
         run: |
-          brew install python gtk4 pygobject3
+          brew install python@3.14 gtk4 pygobject3
           brew list pygobject3 --versions
           brew info pygobject3
       - name: Install build tools
@@ -41,7 +41,7 @@ jobs:
           if [ "$RUNNER_OS" = Linux ]; then
             dbus-run-session -- xvfb-run -a /usr/bin/python3 -m unittest discover -v
           else
-            BREW_PYTHON="$(brew --prefix python)/bin/python3"
+            BREW_PYTHON="$(brew --prefix python@3.14)/bin/python3.14"
             "$BREW_PYTHON" -c 'import gi; gi.require_version("Gtk", "4.0"); from gi.repository import Gtk; print("GTK", Gtk.get_major_version(), Gtk.get_minor_version())'
             "$BREW_PYTHON" -m unittest discover -v
           fi
@@ -54,7 +54,7 @@ jobs:
       - name: Build macOS application
         if: runner.os == 'macOS'
         run: |
-          BREW_PYTHON="$(brew --prefix python)/bin/python3"
+          BREW_PYTHON="$(brew --prefix python@3.14)/bin/python3.14"
           test -x "$BREW_PYTHON"
           "$BREW_PYTHON" -c 'import gi; gi.require_version("Gtk", "4.0"); from gi.repository import Gtk; print(Gtk.get_major_version(), Gtk.get_minor_version())'
           "$BREW_PYTHON" -m pip install -r requirements-build.txt
@@ -64,7 +64,7 @@ jobs:
         run: dbus-run-session -- xvfb-run -a dist/Legenda/Legenda --smoke-test
       - name: Smoke test macOS executable
         if: runner.os == 'macOS'
-        run: dist/Legenda/Legenda --smoke-test
+        run: env -i HOME="$HOME" TMPDIR="$RUNNER_TEMP" PATH=/usr/bin:/bin:/usr/sbin:/sbin dist/Legenda/Legenda --smoke-test
       - name: Archive Linux
         if: runner.os == 'Linux'
         run: tar -czf Legenda-${{ matrix.target }}.tar.gz -C dist Legenda
