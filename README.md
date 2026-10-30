@@ -1,97 +1,150 @@
-# Branch experimental GTK 4
+<div align="center">
 
-Esta branch `feature/gtk4-ui` migra a interface para GTK 4. A versão Tkinter permanece na branch `main`. Para executar: `python3 app.py`.
+<h1>LEGENDA</h1>
 
-Dependências de execução:
-- Arch: `sudo pacman -S python-gobject gtk4`
-- Ubuntu/Debian: `sudo apt install python3-gi python3-gi-cairo gir1.2-gtk-4.0`
-- Fedora: `sudo dnf install python3-gobject gtk4`
+<p><strong>Baixe legendas do OpenSubtitles em uma interface GTK 4 nativa, rápida e sem distrações.</strong></p>
 
-`legenda/ui.py` contém a interface GTK; `legenda/service.py` concentra busca/download sem depender de widgets. A interface Tkinter foi removida desta branch; seu histórico permanece em `main`. Não há fallback silencioso para Tkinter.
+<p>
+  <a href="https://github.com/desenrolado-s/Subtitle-Downloader/actions/workflows/gtk.yml"><img src="https://github.com/desenrolado-s/Subtitle-Downloader/actions/workflows/gtk.yml/badge.svg" alt="GTK migration validation"></a>
+  <a href="https://github.com/desenrolado-s/Subtitle-Downloader/releases/latest"><img src="https://img.shields.io/github/v/release/desenrolado-s/Subtitle-Downloader?label=release" alt="Última release"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white" alt="Python 3.12+"></a>
+  <a href="https://www.gtk.org/"><img src="https://img.shields.io/badge/GTK-4-4A86CF?logo=gtk&logoColor=white" alt="GTK 4"></a>
+  <a href="#requisitos"><img src="https://img.shields.io/badge/platform-Linux-FCC624?logo=linux&logoColor=black" alt="Linux"></a>
+</p>
 
-Estado: testes unitários dos arquivos, API e serviço, mais testes gráficos GTK executados no CI. O workflow `gtk.yml` prepara um AppImage GTK em Ubuntu 22.04, com testes da aplicação e do binário. Sua execução remota e a validação visual ainda estão pendentes; os builds GTK de Windows/macOS ainda não foram adaptados. Os workflows abaixo foram herdados da versão Tkinter e ainda não comprovam builds GTK funcionais.
+</div>
 
----
+## Visão geral
 
-# LEGENDA / Linux
+LEGENDA é um aplicativo desktop para Linux que pesquisa e baixa legendas do catálogo do OpenSubtitles. A interface usa GTK 4 e executa as operações de rede em segundo plano, mantendo a janela responsiva.
 
-Interface em grafite, bordas finas e botões retos. Python 3 e Tkinter, sem pacotes pip.
+O vídeo nunca é enviado ao serviço. A busca usa o hash do arquivo quando ele está vinculado e, se necessário, recorre ao título.
 
-Abra **LEGENDA** no menu de aplicativos do Linux, ou execute:
+## Recursos
+
+- Busca por título ou por hash do vídeo.
+- Vínculo opcional de um arquivo de vídeo local.
+- Filtro por idioma, como `pt-br`, `pt`, `en` e `es`.
+- Download em SRT com validação de conteúdo e gravação atômica.
+- Credenciais guardadas no cofre Secret Service do sistema.
+- Interface escura, minimalista e nativa em GTK 4.
+
+## Requisitos
+
+- Linux com X11 ou Wayland.
+- Python 3.12 ou superior.
+- GTK 4 e PyGObject.
+- `keyring` e um serviço Secret Service ativo, como GNOME Keyring ou KWallet, para salvar credenciais.
+- Conta e chave de API do OpenSubtitles.
+
+## Instalação
+
+Clone o repositório e execute o aplicativo:
 
 ```sh
-python3 /home/raco/legendas-linux/app.py
+git clone https://github.com/desenrolado-s/Subtitle-Downloader.git
+cd Subtitle-Downloader
+python3 app.py
 ```
 
-Se faltar Tkinter: no Arch, instale `tk`; no Ubuntu/Debian, `python3-tk` pelo gerenciador de pacotes.
+Instale as dependências do sistema conforme a sua distribuição:
 
-Crie uma conta em https://www.opensubtitles.com e uma chave de aplicação em https://www.opensubtitles.com/consumers. Abra CONTA / CONFIGURAÇÕES e informe chave, usuário e senha. Credenciais não são gravadas em disco. A chave e o usuário também podem vir das variáveis OPENSUBTITLES_API_KEY e OPENSUBTITLES_USERNAME.
+| Distribuição | Comando |
+| --- | --- |
+| Arch Linux | `sudo pacman -S python-gobject gtk4 python-keyring` |
+| Ubuntu / Debian | `sudo apt install python3-gi python3-gi-cairo gir1.2-gtk-4.0 python3-keyring` |
+| Fedora | `sudo dnf install python3-gobject gtk4 python3-keyring` |
 
-1. Digite o nome do filme ou série; vincular um vídeo é opcional.
-2. Se necessário, ajuste o título e o idioma (pt-br, pt, en, es etc.).
-3. Busque e selecione uma versão compatível com seu vídeo.
-4. Baixe a legenda. Sem vídeo vinculado, escolha o destino em Salvar como. Ela fica ao lado do vídeo como `filme.pt-br.srt`, reconhecida por players como VLC e mpv.
+As bibliotecas GTK precisam vir do sistema. Em um ambiente virtual, use `--system-site-packages` para que o Python consiga importar o PyGObject.
 
-A busca tenta identificar o arquivo pelo hash e depois pelo título. Mostra a primeira página de resultados; refine o título quando necessário. Não sobrescreve legendas existentes. O vídeo não é enviado ao serviço, apenas hash ou título. A disponibilidade, sincronização e limites diários dependem do catálogo e da conta OpenSubtitles. Nenhum catálogo contém legendas para todos os vídeos.
+## Configuração da conta
 
-Documentação da API: https://opensubtitles.stoplight.io/docs/opensubtitles-api
+1. Crie uma conta em [opensubtitles.com](https://www.opensubtitles.com).
+2. Gere uma chave de aplicação em [opensubtitles.com/consumers](https://www.opensubtitles.com/consumers).
+3. Abra **Conta** na barra superior e informe chave, usuário e senha.
+4. Se quiser manter os dados entre sessões, use **Salvar no cofre**.
 
-Verificação local: compilação Python aprovada. A abertura da janela não pôde ser validada neste ambiente sem display; o display virtual também falhou. Download real exige credenciais e não foi validado sem uma conta configurada.
+A chave e o usuário também podem ser definidos pelas variáveis de ambiente `OPENSUBTITLES_API_KEY` e `OPENSUBTITLES_USERNAME`. A senha é solicitada apenas na interface e nunca é gravada em texto puro. Sem um cofre disponível, as credenciais valem somente para a sessão atual.
 
-Testes automatizados: 8 aprovados, incluindo busca e download com respostas simuladas, hash, falha de rede, limite da API, rejeição de HTML e proteção contra sobrescrita. Execute `python3 -m unittest discover -s /home/raco/legendas-linux -v`. O atalho do menu passou em `desktop-file-validate`. Esses testes não comprovam a integração com uma conta real.
+## Como usar
 
-## Organização do código
+1. Digite o nome do filme ou da série. Vincular um vídeo é opcional.
+2. Ajuste o idioma se necessário.
+3. Clique em **Buscar legendas** e selecione uma versão na lista.
+4. Clique em **Baixar selecionada**.
 
-- `app.py`: ponto de entrada, preservando o comando de abertura existente.
-- `legenda/ui.py`: interface e execução das operações em segundo plano.
-- `legenda/provider.py`: cliente REST e erros do OpenSubtitles.
-- `legenda/files.py`: hash do vídeo, validação e salvamento da legenda.
-- `test_app.py`: testes dos módulos e fluxos com respostas de rede simuladas.
+Com um vídeo vinculado, a legenda é salva ao lado dele no formato `filme.pt-br.srt`, reconhecido por players como VLC e mpv. Sem vídeo, o aplicativo abre o diálogo **Salvar como**.
 
-## Builds para outros sistemas
+## Como a busca funciona
 
-O workflow `.github/workflows/build.yml` roda em pushes para `main`, tags `v*`, pull requests e manualmente em **Actions → Test and build desktop apps → Run workflow**.
+1. Se houver um vídeo vinculado com pelo menos 128 KiB, o aplicativo calcula o hash e procura uma correspondência exata.
+2. Se o hash não retornar resultados, a busca é feita pelo título.
+3. A lista mostra a primeira página de resultados, ordenada por número de downloads. Refine o título quando necessário.
 
-Gera Linux x64 (Ubuntu 22.04) com GTK 4. O workflow instala PyGObject/GTK, executa os testes gráficos em D-Bus e Xvfb, empacota com PyInstaller, testa a aplicação e produz um AppImage. O pacote fica em **Artifacts** por 30 dias. Builds GTK para Windows e macOS ainda não estão disponíveis.
+O download exige usuário e senha para autenticar no OpenSubtitles. O aplicativo recusa links que não usam HTTPS, valida o conteúdo como SRT e não sobrescreve legendas existentes.
 
-Para gerar localmente em Ubuntu 22.04 com GTK 4:
+A disponibilidade, a sincronização e os limites diários dependem do catálogo e do plano da conta no OpenSubtitles. Nenhum catálogo contém legendas para todos os vídeos.
+
+## Estrutura do projeto
+
+| Caminho | Responsabilidade |
+| --- | --- |
+| `app.py` | Ponto de entrada GTK e tratamento do modo `--smoke-test`. |
+| `legenda/ui.py` | Janela GTK 4, diálogo de conta e coordenação das tarefas em segundo plano. |
+| `legenda/service.py` | Busca e download independentes da interface. |
+| `legenda/provider.py` | Cliente REST do OpenSubtitles e mensagens de erro. |
+| `legenda/files.py` | Hash do vídeo, validação do SRT e gravação atômica. |
+| `legenda/credentials.py` | Leitura e gravação das credenciais no Secret Service. |
+| `test_*.py` | Testes de arquivos, API, serviço, credenciais e interface GTK. |
+| `packaging/linux/` | Arquivo `.desktop` e ícones do aplicativo. |
+| `scripts/build-appimage.sh` | Empacotamento do AppImage. |
+| `.github/workflows/build.yml` | Testes, builds de Linux/macOS e publicação de releases. |
+| `.github/workflows/gtk.yml` | Validação da interface GTK e do AppImage no GitHub Actions. |
+
+## Testes
+
+Execute a suíte completa:
 
 ```sh
-sudo apt-get install python3-gi python3-gi-cairo gir1.2-gtk-4.0 python3-keyring
-/usr/bin/python3 -m venv --system-site-packages .venv
+python3 -m unittest discover -v
+```
+
+Os testes da interface GTK são ignorados quando não há display. Para executá-los em um ambiente headless:
+
+```sh
+dbus-run-session -- xvfb-run -a python3 -m unittest discover -v
+```
+
+## Build e empacotamento
+
+Para gerar um executável local com PyInstaller:
+
+```sh
+python3 -m venv --system-site-packages .venv
 .venv/bin/python -m pip install -r requirements-build.txt
-.venv/bin/python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda --hidden-import=gi.repository.Gtk --hidden-import=gi.repository.Gdk --hidden-import=gi.repository.Gio --hidden-import=gi.repository.GLib app.py
+.venv/bin/python -m unittest discover -v
+.venv/bin/python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda \
+  --hidden-import=keyring.backends.SecretService \
+  --hidden-import=gi.repository.Gtk \
+  --hidden-import=gi.repository.Gdk \
+  --hidden-import=gi.repository.Gio \
+  --hidden-import=gi.repository.GLib app.py
 ```
 
-Os testes locais passaram após a refatoração. A geração do pacote Linux e os testes gráficos precisam ser confirmados pela execução do GitHub Actions.
-
-## AppImage e distribuições Linux
-
-O build Linux também gera `Legenda-linux-x64.AppImage`. O workflow testa a inicialização desse mesmo pacote em Ubuntu 22.04, Ubuntu 24.04, Debian 12 e Fedora 43, usando containers com display virtual. Isso verifica bibliotecas e abertura da janela, mas não substitui testes interativos em cada desktop. Os resultados desses jobs ainda precisam ser confirmados no GitHub.
-
-Após baixar o artefato e extrair o ZIP do GitHub:
+O resultado fica em `dist/Legenda`. Para gerar o AppImage no Ubuntu 22.04:
 
 ```sh
-chmod +x Legenda-linux-x64.AppImage
-./Legenda-linux-x64.AppImage
+bash scripts/build-appimage.sh
 ```
 
-Se FUSE estiver indisponível, use `./Legenda-linux-x64.AppImage --appimage-extract-and-run`. O AppImage é x86_64 e tem como base Ubuntu 22.04/glibc 2.35; não se promete compatibilidade com distribuições anteriores, Alpine/musl ou Linux ARM. Windows e macOS continuam com pacotes próprios.
+O script produz `Legenda-linux-x64.AppImage` e baixa a versão `continuous` do `appimagetool`, que não é fixada por hash. O workflow `gtk.yml` executa os testes, empacota o aplicativo, testa o binário e publica o artefato `Legenda-GTK-linux-x64.AppImage`.
 
-Para produzir o AppImage, gere primeiro `dist/Legenda` no Ubuntu 22.04 e execute `bash scripts/build-appimage.sh`. O script baixa a versão `continuous` oficial do appimagetool; portanto essa ferramenta não está fixada por hash e o build não é inteiramente reprodutível.
+O workflow `build.yml` executa os testes e empacota Linux x64 e macOS ARM64. Tags `v*` publicam os pacotes em uma GitHub Release.
 
-## Publicação automática de versões
+## Estado atual e limitações
 
-Envie uma tag `v*` para iniciar builds e publicação automática. Exemplo para a primeira versão (use um número ainda não publicado):
-
-```sh
-git push origin main
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-Após os builds e testes Linux passarem, o job `release` publica uma GitHub Release com AppImage, pacote Linux e `SHA256SUMS.txt`. Ele usa o token automático do Actions, sem precisar cadastrar um token pessoal. A release é preparada como rascunho e publicada somente depois do upload completo. Uma nova tentativa pode continuar um rascunho; versões já publicadas não são sobrescritas. Pushes comuns em `main` geram apenas artefatos de teste, sem criar uma versão pública.
-
-Na interface GTK, abra **Conta → Salvar no cofre** para lembrar chave API, usuário e senha. Na próxima abertura, o aplicativo recupera os dados pelo Secret Service do desktop. **Esquecer credenciais salvas** apaga os dados do cofre e limpa os campos. Não há fallback para arquivo em texto puro. Instale `python-keyring` no Arch ou `python3-keyring` no Ubuntu/Debian e mantenha um serviço compatível (como GNOME Keyring) disponível/desbloqueado. Falhas do cofre são exibidas na interface. O teste automatizado usa um cofre simulado; a integração real depende da sessão de desktop.
-
-Botões e lista de resultados usam cursor `pointer` ao passar o mouse.
+- A interface GTK é a versão atual. O empacotamento oficial cobre Linux x64 e macOS ARM64; Windows não é suportado no momento.
+- A release `v1.0.1` corresponde à versão anterior com Tkinter. Novas tags usam o empacotamento GTK.
+- O AppImage é x86_64, usa como base Ubuntu 22.04/glibc 2.35 e não tem compatibilidade garantida com distribuições anteriores, Alpine/musl ou Linux ARM.
+- Os pacotes não são assinados nem notarizados.
+- O download real depende de credenciais válidas e dos limites da conta OpenSubtitles.
