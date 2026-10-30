@@ -110,10 +110,11 @@ jobs:
         run: |
           docker run --rm -v "$PWD/artifacts:/artifacts:ro" "$DISTRO" sh -ec '
             if command -v apt-get >/dev/null; then
+              export DEBIAN_FRONTEND=noninteractive
               apt-get update
-              apt-get install -y xvfb xauth libx11-6 libxext6 libxrender1 libxft2 libfontconfig1 ca-certificates
+              apt-get install -y xvfb xauth gir1.2-gtk-4.0 ca-certificates dbus-x11
             else
-              dnf install -y xorg-x11-server-Xvfb xorg-x11-xauth libX11 libXext libXrender libXft fontconfig ca-certificates tar
+              dnf install -y xorg-x11-server-Xvfb xorg-x11-xauth gtk4 ca-certificates tar dbus-daemon
             fi
             cp /artifacts/Legenda-linux-x64.AppImage /tmp/Legenda.AppImage
             chmod +x /tmp/Legenda.AppImage
@@ -122,7 +123,11 @@ jobs:
             Xvfb :99 -screen 0 1280x900x24 &
             export DISPLAY=:99
             sleep 2
-            timeout 60 ./squashfs-root/AppRun --smoke-test
+            if command -v dbus-run-session >/dev/null; then
+              dbus-run-session -- timeout 60 ./squashfs-root/AppRun --smoke-test
+            else
+              timeout 60 ./squashfs-root/AppRun --smoke-test
+            fi
           '
 
   release:
