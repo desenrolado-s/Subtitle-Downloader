@@ -1,0 +1,21 @@
+name: GTK migration validation
+on:
+  push:
+    branches: [feature/gtk4-ui]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gtk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native GTK dependencies
+        run: sudo apt-get update && sudo apt-get install -y python3-gi python3-gi-cairo gir1.2-gtk-4.0 python3-tk xvfb xauth dbus-x11
+      - name: Test GTK widgets and services
+        run: dbus-run-session -- xvfb-run -a /usr/bin/python3 -m unittest discover -v
+      - name: Open and close GTK application
+        timeout-minutes: 2
+        run: dbus-run-session -- xvfb-run -a /usr/bin/python3 app.py --smoke-test

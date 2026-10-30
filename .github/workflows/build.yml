@@ -9,6 +9,8 @@ permissions:
   contents: read
 jobs:
   build:
+    # GTK packaging is validated separately while this migration is in progress.
+    if: github.ref != 'refs/heads/feature/gtk4-ui' && github.head_ref != 'feature/gtk4-ui'
     strategy:
       fail-fast: false
       matrix:

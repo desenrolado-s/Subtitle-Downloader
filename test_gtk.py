@@ -1,0 +1,43 @@
+"""GTK integration checks; run with a graphical display or xvfb-run."""
+import unittest
+from unittest.mock import patch
+from legenda.ui import App, Gtk, Gdk
+
+Gtk.init()
+
+@unittest.skipUnless(Gdk.Display.get_default(), 'Requires a graphical display')
+class GtkTests(unittest.TestCase):
+    def setUp(self):
+        self.app = App()
+        self.app.register(None)
+        self.app.activate()
+        self.app.run_task = lambda work, done: done(work())
+
+    def tearDown(self):
+        if getattr(self.app, 'account', None):
+            self.app.account.destroy()
+        self.app.window.destroy()
+        self.app.quit()
+
+    def test_title_search_populates_rows(self):
+        self.app.query.set_text('Dune')
+        self.app.key.set_text('key')
+        result = [({'file_id': 1, 'file_name': 'Dune.srt'}, {'language': 'pt-br'})]
+        with patch('legenda.ui.service.search', return_value=result) as search:
+            self.app.search()
+        search.assert_called_once_with('Dune', None, 'pt-br', 'key')
+        self.assertIsNotNone(self.app.list.get_row_at_index(0))
+        self.assertEqual(self.app.results, result)
+
+    def test_account_window_can_reopen(self):
+        self.app.settings()
+        self.app.key.set_text('session-key')
+        self.app.account.hide()
+        self.app.settings()
+        self.assertTrue(self.app.account.get_visible())
+        self.assertEqual(self.app.key.get_text(), 'session-key')
+
+    def test_invalid_query_stops_request(self):
+        with patch('legenda.ui.service.search') as search:
+            self.app.search()
+        search.assert_not_called()
