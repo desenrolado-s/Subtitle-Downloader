@@ -1,3 +1,18 @@
+# Branch experimental GTK 4
+
+Esta branch `feature/gtk4-ui` migra a interface para GTK 4. A versão Tkinter permanece na branch `main`. Para executar: `python3 app.py`.
+
+Dependências de execução:
+- Arch: `sudo pacman -S python-gobject gtk4`
+- Ubuntu/Debian: `sudo apt install python3-gi python3-gi-cairo gir1.2-gtk-4.0`
+- Fedora: `sudo dnf install python3-gobject gtk4`
+
+`legenda/ui.py` contém a interface GTK; `legenda/service.py` concentra busca/download sem depender de widgets. `legacy_ui.py` permanece temporariamente para testes de regressão durante a migração. Não há fallback silencioso para Tkinter.
+
+Estado: 12 testes automatizados aprovados (4 da nova camada de serviço). A validação visual e a adaptação do empacotamento multiplataforma para GTK ainda estão pendentes. Os workflows abaixo foram herdados da versão Tkinter e ainda não comprovam builds GTK funcionais.
+
+---
+
 # LEGENDA / Linux
 
 Interface em grafite, bordas finas e botões retos. Python 3 e Tkinter, sem pacotes pip.

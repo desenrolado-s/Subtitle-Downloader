@@ -1,199 +1,189 @@
-"""Tkinter desktop interface and background task coordination."""
+"""GTK 4 desktop interface."""
 import os
 import re
 import threading
-import queue
-import urllib.request
-import urllib.parse
 from pathlib import Path
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
-from .files import movie_hash, save_subtitle
-from .provider import api
+import gi
+gi.require_version('Gtk', '4.0')
+from gi.repository import Gtk, Gdk, GLib
+from . import service
 
-BG, FG = '#101112', '#f4f4f0'
+CSS = b'''
+window { background: #111315; color: #f4f4f0; }
+headerbar { background: #111315; box-shadow: none; border-bottom: 1px solid #777; }
+button, entry { border-radius: 0; border: 1px solid #aaa; padding: 10px 14px; background: transparent; color: #f4f4f0; }
+button:hover { background: #34383c; }
+button.primary { background: #eee; color: #111; }
+.title { font-size: 32px; font-weight: bold; }
+.muted { color: #a7adb2; }
+list { background: transparent; }
+row { padding: 16px; border-bottom: 1px solid #444; }
+row:selected { background: #353b41; }
+'''
 
-class App:
-    def __init__(self, root):
-        self.root = root
-        root.title('LEGENDA / Subtitle Downloader')
-        root.geometry('1100x800')
-        root.minsize(900, 740)
-        root.configure(bg=BG)
-        self.events = queue.Queue()
+class App(Gtk.Application):
+    def __init__(self, smoke=False):
+        super().__init__(application_id='io.github.desenrolado_s.Legenda')
+        self.smoke = smoke
+        self.video = None
         self.results = []
         self.busy = False
-        style = ttk.Style()
-        style.theme_use('clam')
-        style.configure('Treeview', background=BG, foreground=FG, fieldbackground=BG, rowheight=42, bordercolor=FG)
-        style.configure('Treeview.Heading', background='#222426', foreground=FG, relief='flat')
-        style.map('Treeview', background=[('selected', '#495356')])
-        main = tk.Frame(root, bg=BG)
-        main.pack(fill='both', expand=True, padx=30, pady=24)
-        header = tk.Frame(main, bg=BG)
-        header.pack(fill='x')
-        self.label(header, 'LEGENDA', 24).pack(side='left')
-        self.button(header, 'CONTA / CONFIGURAÇÕES', self.settings).pack(side='right')
-        self.label(main, 'C I N E M A   /   S E M   B A R R E I R A S', 9).pack(anchor='w', pady=(0, 18))
-        tk.Frame(main, bg=FG, height=1).pack(fill='x', pady=(0, 18))
-        self.video = tk.StringVar()
-        self.query = tk.StringVar()
-        self.key = tk.StringVar(value=os.getenv('OPENSUBTITLES_API_KEY', ''))
-        self.user = tk.StringVar(value=os.getenv('OPENSUBTITLES_USERNAME', ''))
-        self.password = tk.StringVar()
-        self.lang = tk.StringVar(value='pt-br')
-        self.label(main, 'Encontre a legenda certa.', 28).pack(anchor='w', pady=(6, 6))
-        self.label(main, 'Pesquise um filme ou série. O arquivo de vídeo é opcional.', 11).pack(anchor='w', pady=(0, 20))
-        self.field(main, '01  /  NOME DO FILME OU SÉRIE', self.query)
-        attach = tk.Frame(main, bg=BG)
-        attach.pack(fill='x', pady=10)
-        self.button(attach, '+ VINCULAR VÍDEO', self.choose).pack(side='left')
-        self.button(attach, 'REMOVER', lambda: self.video.set('')).pack(side='left', padx=8)
-        self.label(attach, '', 9, textvariable=self.video, wraplength=560).pack(side='left', padx=8)
-        row = tk.Frame(main, bg=BG)
-        row.pack(fill='x', pady=12)
-        self.label(row, 'IDIOMA').pack(side='left', padx=(0, 12))
-        self.entry(row, self.lang, width=9).pack(side='left')
-        self.label(row, 'pt-br · pt · en · es').pack(side='left', padx=12)
-        self.button(row, 'BUSCAR LEGENDAS →', self.search).pack(side='right')
-        self.label(main, '02  /  LEGENDAS DISPONÍVEIS').pack(anchor='w', pady=8)
-        self.tree = ttk.Treeview(main, columns=('release', 'lang', 'downloads'), show='headings', selectmode='browse')
-        for col, title, width in [('release', 'VERSÃO / ARQUIVO', 580), ('lang', 'IDIOMA', 75), ('downloads', 'DOWNLOADS', 100)]:
-            self.tree.heading(col, text=title)
-            self.tree.column(col, width=width)
-        self.tree.pack(fill='both', expand=True)
-        self.tree.bind('<Double-1>', lambda event: self.download())
-        scrollbar = ttk.Scrollbar(main, orient='horizontal', command=self.tree.xview)
-        scrollbar.pack(fill='x')
-        self.tree.configure(xscrollcommand=scrollbar.set)
-        self.button(main, 'BAIXAR SELECIONADA ↓', self.download).pack(anchor='e', pady=14)
-        self.status = tk.StringVar(value='Busque pelo título para começar. Configure sua conta no canto superior direito.')
-        self.label(main, '', 10, textvariable=self.status).pack(anchor='w')
-        root.after(100, self.poll)
+
+    def do_activate(self):
+        if getattr(self, 'window', None):
+            self.window.present()
+            return
+        self.window = Gtk.ApplicationWindow(application=self, title='LEGENDA')
+        self.window.set_default_size(1000, 760)
+        css = Gtk.CssProvider()
+        css.load_from_data(CSS)
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        header = Gtk.HeaderBar()
+        header.pack_end(self.button('Conta', self.settings))
+        self.window.set_titlebar(header)
+        self.body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
+        for side in ('top', 'bottom', 'start', 'end'):
+            getattr(self.body, 'set_margin_' + side)(28)
+        self.window.set_child(self.body)
+        self.body.append(self.label('Encontre a legenda certa.', 'title'))
+        self.body.append(self.label('Busque pelo título. Vincule um vídeo para encontrar a versão exata.', 'muted'))
+        self.query = Gtk.Entry(placeholder_text='Nome do filme ou série')
+        self.query.connect('activate', lambda _: self.search())
+        self.body.append(self.query)
+        bar = Gtk.Box(spacing=12)
+        self.language = Gtk.Entry(text='pt-br', width_chars=7)
+        bar.append(self.language)
+        bar.append(self.button('+ Vincular vídeo', self.choose_video))
+        bar.append(self.button('Remover vídeo', self.clear_video))
+        search = self.button('Buscar legendas →', self.search)
+        search.add_css_class('primary')
+        bar.append(search)
+        self.body.append(bar)
+        self.video_label = self.label('Nenhum vídeo vinculado', 'muted')
+        self.body.append(self.video_label)
+        self.list = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
+        scroll = Gtk.ScrolledWindow(vexpand=True)
+        scroll.set_child(self.list)
+        self.body.append(scroll)
+        self.body.append(self.button('Baixar selecionada ↓', self.download))
+        self.status = self.label('Digite um título para começar.', 'muted')
+        self.body.append(self.status)
+        self.key = Gtk.Entry(text=os.getenv('OPENSUBTITLES_API_KEY', ''), visibility=False)
+        self.user = Gtk.Entry(text=os.getenv('OPENSUBTITLES_USERNAME', ''))
+        self.password = Gtk.Entry(visibility=False)
+        self.window.present()
+        if self.smoke:
+            GLib.timeout_add(300, lambda: (self.quit(), False)[1])
+
+    def label(self, text, style=''):
+        label = Gtk.Label(label=text, xalign=0, wrap=True)
+        if style:
+            label.add_css_class(style)
+        return label
+
+    def button(self, text, callback):
+        button = Gtk.Button(label=text)
+        button.connect('clicked', lambda _: callback())
+        return button
 
     def settings(self):
-        window = tk.Toplevel(self.root)
-        window.title('Conta OpenSubtitles')
-        window.configure(bg=BG)
-        window.geometry('560x420')
-        window.transient(self.root)
-        body = tk.Frame(window, bg=BG)
-        body.pack(fill='both', expand=True, padx=28, pady=24)
-        self.label(body, 'Sua conta', 24).pack(anchor='w', pady=(0, 12))
-        for title, var, secret in [('CHAVE API', self.key, True), ('USUÁRIO', self.user, False), ('SENHA', self.password, True)]:
-            self.field(body, title, var, secret=secret)
-        self.label(body, 'Credenciais mantidas apenas nesta sessão.', 9).pack(anchor='w', pady=12)
-        self.button(body, 'CONCLUÍDO', window.destroy).pack(anchor='e')
-        window.grab_set()
-
-    def label(self, parent, text, size=10, **kw):
-        return tk.Label(parent, text=text, bg=BG, fg=FG, font=('DejaVu Sans', size), **kw)
-
-    def entry(self, parent, var, **kw):
-        return tk.Entry(parent, textvariable=var, bg=BG, fg=FG, insertbackground=FG, relief='flat', highlightthickness=1, highlightbackground=FG, highlightcolor=FG, font=('DejaVu Sans', 11), **kw)
-
-    def button(self, parent, text, action):
-        return tk.Button(parent, text=text, command=action, bg=BG, fg=FG, activebackground=FG, activeforeground=BG, relief='solid', bd=1, padx=16, pady=9, cursor='hand2', font=('DejaVu Sans', 10))
-
-    def field(self, parent, title, var, secret=False, action=None):
-        self.label(parent, title).pack(anchor='w', pady=(5, 5))
-        row = tk.Frame(parent, bg=BG)
-        row.pack(fill='x', pady=(0, 5))
-        self.entry(row, var, show='•' if secret else '').pack(side='left', fill='x', expand=True, ipady=7)
-        if action:
-            self.button(row, *action).pack(side='left', padx=(10, 0))
-
-    def choose(self):
-        if self.busy:
+        if getattr(self, 'account', None):
+            self.account.present()
             return
-        path = filedialog.askopenfilename(title='Selecione o vídeo', filetypes=[('Vídeos', '*.mkv *.mp4 *.avi *.mov *.webm *.m4v'), ('Todos', '*')])
-        if path:
-            self.video.set(path)
-            self.query.set(Path(path).stem.replace('.', ' '))
-            self.results = []
-            self.tree.delete(*self.tree.get_children())
+        self.account = Gtk.Window(title='Conta OpenSubtitles', transient_for=self.window, modal=True)
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        for side in ('top', 'bottom', 'start', 'end'):
+            getattr(box, 'set_margin_' + side)(24)
+        for title, widget in [('Chave API', self.key), ('Usuário', self.user), ('Senha', self.password)]:
+            box.append(self.label(title))
+            box.append(widget)
+        box.append(self.label('Credenciais mantidas apenas nesta sessão.', 'muted'))
+        box.append(self.button('Concluído', self.account.hide))
+        self.account.set_child(box)
+        self.account.connect('close-request', lambda w: (w.hide(), True)[1])
+        self.account.present()
 
-    def run(self, work, done):
+    def chooser(self, save, callback):
+        self.dialog = Gtk.FileChooserNative(title='Salvar legenda' if save else 'Selecionar vídeo', transient_for=self.window, action=Gtk.FileChooserAction.SAVE if save else Gtk.FileChooserAction.OPEN)
+        if save:
+            self.dialog.set_current_name('legenda.' + self.search_language + '.srt')
+        def response(dialog, result):
+            file = dialog.get_file()
+            dialog.destroy()
+            if result == Gtk.ResponseType.ACCEPT and file and file.get_path():
+                callback(Path(file.get_path()))
+        self.dialog.connect('response', response)
+        self.dialog.show()
+
+    def choose_video(self):
+        if not self.busy:
+            self.chooser(False, self.set_video)
+
+    def set_video(self, path):
+        self.video = path
+        self.video_label.set_text(str(path))
+        self.query.set_text(path.stem.replace('.', ' '))
+
+    def clear_video(self):
+        if not self.busy:
+            self.video = None
+            self.video_label.set_text('Nenhum vídeo vinculado')
+
+    def run_task(self, work, done):
         if self.busy:
             return
         self.busy = True
-        self.status.set('Aguarde…')
-        def worker():
-            try:
-                self.events.put((done, work(), None))
-            except Exception as e:
-                self.events.put((done, None, str(e)))
-        threading.Thread(target=worker, daemon=True).start()
-
-    def poll(self):
-        try:
-            done, result, error = self.events.get_nowait()
+        self.status.set_text('Aguarde…')
+        def finish(value, error):
             self.busy = False
             if error:
-                self.status.set('Não foi possível concluir.')
-                messagebox.showerror('LEGENDA', error)
+                self.status.set_text(str(error))
             else:
-                done(result)
-        except queue.Empty:
-            pass
-        self.root.after(100, self.poll)
+                done(value)
+            return False
+        def worker():
+            try:
+                value = work()
+            except Exception as error:
+                GLib.idle_add(finish, None, error)
+            else:
+                GLib.idle_add(finish, value, None)
+        threading.Thread(target=worker, daemon=True).start()
 
     def search(self):
         if self.busy:
             return
-        path, key, lang, query = (Path(self.video.get()) if self.video.get().strip() else None), self.key.get().strip(), self.lang.get().strip(), self.query.get().strip()
-        if (path is not None and not path.is_file()) or (path is None and not query) or not key or not re.fullmatch(r'[a-z]{2,3}(?:-[a-z]{2})?', lang):
-            messagebox.showinfo('Falta informação', 'Digite o título ou selecione um vídeo válido. Configure a chave API e um idioma (ex.: pt-br).')
+        title, lang, key = self.query.get_text().strip(), self.language.get_text().strip(), self.key.get_text().strip()
+        if not (title or self.video) or not key or not re.fullmatch(r'[a-z]{2,3}(?:-[a-z]{2})?', lang):
+            self.status.set_text('Informe título ou vídeo, idioma e chave API em Conta.')
             return
+        video = self.video
         self.results = []
-        self.tree.delete(*self.tree.get_children())
-        def work():
-            h = movie_hash(path) if path else None
-            params = {'languages': lang, 'order_by': 'download_count', 'order_direction': 'desc'}
-            rows = []
-            if h:
-                rows = api('subtitles?' + urllib.parse.urlencode(dict(params, moviehash=h, moviehash_match='only')), key).get('data', [])
-            if not rows:
-                rows = api('subtitles?' + urllib.parse.urlencode(dict(params, query=query or path.stem)), key).get('data', [])
-            return [(f, row['attributes']) for row in rows for f in row['attributes'].get('files', [])]
+        while self.list.get_first_child():
+            self.list.remove(self.list.get_first_child())
         def done(rows):
             self.results = rows
-            self.search_video = path
-            self.search_lang = lang
-            self.search_title = query
-            for i, (f, attr) in enumerate(rows):
-                self.tree.insert('', 'end', iid=str(i), values=(f.get('file_name', attr.get('release', '')), attr.get('language'), attr.get('download_count')))
-            self.status.set(f'{len(rows)} arquivos encontrados (primeira página). Ajuste o título para refinar.' if rows else 'Nenhuma legenda encontrada. Tente outro título ou idioma.')
-        self.run(work, done)
+            self.search_video, self.search_language = video, lang
+            for file, attrs in rows:
+                self.list.append(self.label(f"{file.get('file_name', 'Legenda')}\n{attrs.get('language', '')} · {attrs.get('download_count', 0)} downloads"))
+            self.status.set_text(f'{len(rows)} arquivos encontrados. Selecione uma versão.' if rows else 'Nenhum resultado. Tente outro título ou idioma.')
+        self.run_task(lambda: service.search(title, video, lang, key), done)
 
     def download(self):
-        if self.busy or not self.tree.selection():
+        row = self.list.get_selected_row()
+        if self.busy or row is None:
             return
-        f, attr = self.results[int(self.tree.selection()[0])]
-        if self.search_video:
-            target = self.search_video.with_suffix('.' + self.search_lang + '.srt')
-        else:
-            name = re.sub(r'[^\w .-]', '_', self.search_title).strip(' .') or 'legenda'
-            destination = filedialog.asksaveasfilename(title='Salvar legenda', initialfile=f'{name}.{self.search_lang}.srt', defaultextension='.srt', filetypes=[('Legenda SRT', '*.srt')])
-            if not destination:
+        file, _ = self.results[row.get_index()]
+        key, user, password = self.key.get_text(), self.user.get_text(), self.password.get_text()
+        if not all((key, user, password)):
+            self.status.set_text('Preencha chave, usuário e senha em Conta.')
+            return
+        def save(path):
+            if path.exists():
+                self.status.set_text('O arquivo já existe. Escolha outro nome.')
                 return
-            target = Path(destination)
-        if target.exists():
-            messagebox.showinfo('Arquivo já existe', f'A legenda já existe: {target}\nRenomeie-a antes de baixar outra versão.')
-            return
-        key, user, password = self.key.get().strip(), self.user.get().strip(), self.password.get()
-        if not user or not password:
-            messagebox.showinfo('Conta OpenSubtitles', 'Informe usuário e senha para baixar.')
-            return
-        def work():
-            token = api('login', key, {'username': user, 'password': password})['token']
-            data = api('download', key, {'file_id': f['file_id'], 'sub_format': 'srt'}, token)
-            link = data['link']
-            if urllib.parse.urlparse(link).scheme != 'https':
-                raise RuntimeError('O servidor retornou um link inseguro.')
-            with urllib.request.urlopen(link, timeout=60) as r:
-                content = r.read(10 * 1024 * 1024 + 1)
-            return save_subtitle(target, content)
-        self.run(work, lambda path: self.status.set(f'Salva: {path}'))
-
-
+            self.run_task(lambda: service.download(file['file_id'], path, key, user, password), lambda p: self.status.set_text(f'Salva: {p}'))
+        if self.search_video:
+            save(self.search_video.with_suffix('.' + self.search_language + '.srt'))
+        else:
+            self.chooser(True, save)

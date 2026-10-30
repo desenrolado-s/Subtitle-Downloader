@@ -1,17 +1,10 @@
 #!/usr/bin/env python3
-"""Desktop entry point, also used by PyInstaller."""
 import sys
-
-def main():
-    from legenda.ui import App
-    import tkinter as tk
-    root = tk.Tk()
-    App(root)
-    if '--smoke-test' in sys.argv:
-        root.update()
-        root.destroy()
-    else:
-        root.mainloop()
+from legenda.ui import App, Gtk, Gdk
 
 if __name__ == '__main__':
-    main()
+    Gtk.init()
+    if Gdk.Display.get_default() is None:
+        print('Não foi possível conectar ao display gráfico.', file=sys.stderr)
+        raise SystemExit(1)
+    raise SystemExit(App(smoke='--smoke-test' in sys.argv).run([sys.argv[0]]))

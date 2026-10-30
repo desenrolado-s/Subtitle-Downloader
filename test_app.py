@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch, Mock
 import urllib.error
-from legenda import ui as app
+from legenda import legacy_ui as app
 from legenda.provider import api, BASE
 from legenda.files import save_subtitle, movie_hash
 
@@ -66,10 +66,10 @@ class Tests(unittest.TestCase):
             ui.run = lambda work, done: done(work())
             response = {'data': [{'attributes': {'language': 'pt-br', 'download_count': 4,
                         'files': [{'file_id': 42, 'file_name': 'movie.srt'}]}}]}
-            with patch('legenda.ui.api', return_value=response):
+            with patch('legenda.legacy_ui.api', return_value=response):
                 ui.search()
             self.assertEqual(len(ui.results), 1)
-            with patch('legenda.ui.api', side_effect=[{'token': 'token'}, {'link': 'https://example.org/sub.srt'}]) as api_call:
+            with patch('legenda.legacy_ui.api', side_effect=[{'token': 'token'}, {'link': 'https://example.org/sub.srt'}]) as api_call:
                 with patch('urllib.request.urlopen', return_value=io.BytesIO(SRT)):
                     ui.download()
             self.assertEqual(video.with_suffix('.pt-br.srt').read_bytes(), SRT)
@@ -92,11 +92,11 @@ class Tests(unittest.TestCase):
             ui.run = lambda work, done: done(work())
             response = {'data': [{'attributes': {'language': 'pt-br', 'download_count': 4,
                         'files': [{'file_id': 42, 'file_name': 'movie.srt'}]}}]}
-            with patch('legenda.ui.api', return_value=response):
+            with patch('legenda.legacy_ui.api', return_value=response):
                 ui.search()
             self.assertEqual(len(ui.results), 1)
-            with patch('legenda.ui.api', side_effect=[{'token': 'token'}, {'link': 'https://example.org/sub.srt'}]) as api_call:
-                with patch('urllib.request.urlopen', return_value=io.BytesIO(SRT)), patch('legenda.ui.filedialog.asksaveasfilename', return_value=str(video.with_suffix('.pt-br.srt'))):
+            with patch('legenda.legacy_ui.api', side_effect=[{'token': 'token'}, {'link': 'https://example.org/sub.srt'}]) as api_call:
+                with patch('urllib.request.urlopen', return_value=io.BytesIO(SRT)), patch('legenda.legacy_ui.filedialog.asksaveasfilename', return_value=str(video.with_suffix('.pt-br.srt'))):
                     ui.download()
             self.assertEqual(video.with_suffix('.pt-br.srt').read_bytes(), SRT)
             self.assertEqual(api_call.call_args.args, ('download', 'key', {'file_id': 42, 'sub_format': 'srt'}, 'token'))
