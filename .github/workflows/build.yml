@@ -29,7 +29,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y python3-gi python3-gi-cairo gir1.2-gtk-4.0 python3-keyring xvfb xauth dbus-x11
       - name: macOS GTK dependencies
         if: runner.os == 'macOS'
-        run: brew install pygobject3 gtk4
+        run: |
+          brew install python gtk4 pygobject3
+          brew list pygobject3 --versions
+          brew info pygobject3
       - name: Install build tools
         if: runner.os == 'Linux'
         run: python -m pip install -r requirements-build.txt
@@ -38,7 +41,9 @@ jobs:
           if [ "$RUNNER_OS" = Linux ]; then
             dbus-run-session -- xvfb-run -a /usr/bin/python3 -m unittest discover -v
           else
-            "$(brew --prefix)/bin/python3" -m unittest discover -v
+            BREW_PYTHON="$(brew --prefix python)/bin/python3"
+            "$BREW_PYTHON" -c 'import gi; gi.require_version("Gtk", "4.0"); from gi.repository import Gtk; print("GTK", Gtk.get_major_version(), Gtk.get_minor_version())'
+            "$BREW_PYTHON" -m unittest discover -v
           fi
       - name: Build application
         if: runner.os == 'Linux'
@@ -49,7 +54,8 @@ jobs:
       - name: Build macOS application
         if: runner.os == 'macOS'
         run: |
-          BREW_PYTHON="$(brew --prefix)/bin/python3"
+          BREW_PYTHON="$(brew --prefix python)/bin/python3"
+          test -x "$BREW_PYTHON"
           "$BREW_PYTHON" -c 'import gi; gi.require_version("Gtk", "4.0"); from gi.repository import Gtk; print(Gtk.get_major_version(), Gtk.get_minor_version())'
           "$BREW_PYTHON" -m pip install -r requirements-build.txt
           "$BREW_PYTHON" -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda --hidden-import=gi.repository.Gtk --hidden-import=gi.repository.Gdk --hidden-import=gi.repository.Gio --hidden-import=gi.repository.GLib app.py
