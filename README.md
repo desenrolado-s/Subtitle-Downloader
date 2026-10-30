@@ -7,9 +7,9 @@ Dependências de execução:
 - Ubuntu/Debian: `sudo apt install python3-gi python3-gi-cairo gir1.2-gtk-4.0`
 - Fedora: `sudo dnf install python3-gobject gtk4`
 
-`legenda/ui.py` contém a interface GTK; `legenda/service.py` concentra busca/download sem depender de widgets. `legacy_ui.py` permanece temporariamente para testes de regressão durante a migração. Não há fallback silencioso para Tkinter.
+`legenda/ui.py` contém a interface GTK; `legenda/service.py` concentra busca/download sem depender de widgets. A interface Tkinter foi removida desta branch; seu histórico permanece em `main`. Não há fallback silencioso para Tkinter.
 
-Estado: 12 testes automatizados aprovados (4 da nova camada de serviço). A validação visual e a adaptação do empacotamento multiplataforma para GTK ainda estão pendentes. Os workflows abaixo foram herdados da versão Tkinter e ainda não comprovam builds GTK funcionais.
+Estado: testes unitários dos arquivos, API e serviço, mais testes gráficos GTK executados no CI. O workflow `gtk.yml` prepara um AppImage GTK em Ubuntu 22.04, com testes da aplicação e do binário. Sua execução remota e a validação visual ainda estão pendentes; os builds GTK de Windows/macOS ainda não foram adaptados. Os workflows abaixo foram herdados da versão Tkinter e ainda não comprovam builds GTK funcionais.
 
 ---
 
