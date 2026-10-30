@@ -4,7 +4,10 @@ cd "$(dirname "$0")/.."
 test -x dist/Legenda/Legenda
 mkdir -p build/Legenda.AppDir/usr/Legenda
 cp -a dist/Legenda/. build/Legenda.AppDir/usr/Legenda/
-cp packaging/linux/legenda.desktop packaging/linux/legenda.svg build/Legenda.AppDir/
+cp packaging/linux/legenda.desktop packaging/linux/legenda.png build/Legenda.AppDir/
+cp packaging/linux/legenda.png build/Legenda.AppDir/.DirIcon
+test -s build/Legenda.AppDir/legenda.png
+test -s build/Legenda.AppDir/.DirIcon
 cat > build/Legenda.AppDir/AppRun <<'RUN'
 #!/bin/sh
 HERE="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
