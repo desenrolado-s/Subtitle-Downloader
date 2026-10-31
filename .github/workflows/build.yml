@@ -121,7 +121,7 @@ jobs:
               dnf install -y xorg-x11-server-Xvfb xorg-x11-xauth python3-gobject gtk4 gobject-introspection ca-certificates tar dbus-daemon
             elif command -v zypper >/dev/null; then
               zypper --non-interactive refresh
-              zypper --non-interactive install --no-recommends xorg-x11-server-Xvfb xauth python3-gobject-Gdk gtk4 typelib-1_0-Gtk-4_0 gobject-introspection ca-certificates tar dbus-1 dbus-1-daemon
+              zypper --non-interactive install --no-recommends xorg-x11-server-Xvfb xauth python3-gobject-Gdk gtk4 typelib-1_0-Gtk-4_0 gobject-introspection ca-certificates tar dbus-1 dbus-1-daemon google-noto-sans-fonts
               # The Tumbleweed GTK renderer needs a software GL backend under Xvfb.
               export LIBGL_ALWAYS_SOFTWARE=1
               export GALLIUM_DRIVER=llvmpipe
@@ -136,6 +136,7 @@ jobs:
             export DISPLAY=:99
             # Use the software renderer for the headless Xvfb smoke test.
             export GSK_RENDERER=cairo
+            export GTK_A11Y=none
             sleep 2
             if command -v dbus-run-session >/dev/null; then
               dbus-run-session -- timeout 60 ./Legenda/Legenda --smoke-test
