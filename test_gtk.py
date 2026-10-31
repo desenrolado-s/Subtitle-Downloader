@@ -53,3 +53,11 @@ class GtkTests(unittest.TestCase):
         with patch('legenda.ui.service.search') as search:
             self.app.search()
         search.assert_not_called()
+
+    def test_keyless_episode_search_is_allowed(self):
+        self.app.query.set_text('The Show S01E02')
+        result = [({'provider': 'gestdown', 'download_url': 'https://api.gestdown.info/subtitles/download/x', 'file_name': 'The Show S01E02'}, {'language': 'pt-br', 'source': 'Gestdown (Addic7ed)'})]
+        with patch('legenda.ui.service.search', return_value=result) as search:
+            self.app.search()
+        search.assert_called_once_with('The Show S01E02', None, 'pt-br', '')
+        self.assertIsNotNone(self.app.list.get_row_at_index(0))
