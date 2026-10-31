@@ -69,7 +69,7 @@ class App(Gtk.Application):
             getattr(self.body, 'set_margin_' + side)(28)
         self.window.set_child(self.body)
         self.body.append(self.label('Encontre a legenda certa.', 'title'))
-        self.body.append(self.label('Busque pelo título. Vincule um vídeo para encontrar a versão exata.', 'muted'))
+        self.body.append(self.label('Podnapisi busca filmes e séries em vários idiomas sem chave. Gestdown/Subtitulamos.tv pedem S01E02; AJATT atende anime em japonês.', 'muted'))
         self.query = Gtk.Entry(placeholder_text='Nome do filme ou série')
         self.query.connect('activate', lambda _: self.search())
         self.body.append(self.query)
@@ -216,8 +216,8 @@ class App(Gtk.Application):
         if self.busy:
             return
         title, lang, key = self.query.get_text().strip(), self.language.get_text().strip(), self.key.get_text().strip()
-        if not (title or self.video) or not key or not re.fullmatch(r'[a-z]{2,3}(?:-[a-z]{2})?', lang):
-            self.status.set_text('Informe título ou vídeo, idioma e chave API em Conta.')
+        if not (title or self.video) or not re.fullmatch(r'[a-z]{2,3}(?:-[a-z]{2})?', lang):
+            self.status.set_text('Informe título ou vídeo e um idioma válido.')
             return
         video = self.video
         self.results = []
@@ -227,7 +227,7 @@ class App(Gtk.Application):
             self.results = rows
             self.search_video, self.search_language = video, lang
             for file, attrs in rows:
-                self.list.append(self.label(f"{file.get('file_name', 'Legenda')}\n{attrs.get('language', '')} · {attrs.get('download_count', 0)} downloads"))
+                self.list.append(self.label(f"{file.get('file_name', 'Legenda')}\n{attrs.get('source', 'OpenSubtitles')} · {attrs.get('language', '')} · {attrs.get('download_count', 0)} downloads"))
             self.status.set_text(f'{len(rows)} arquivos encontrados. Selecione uma versão.' if rows else 'Nenhum resultado. Tente outro título ou idioma.')
         self.run_task(lambda: service.search(title, video, lang, key), done)
 
@@ -237,14 +237,14 @@ class App(Gtk.Application):
             return
         file, _ = self.results[row.get_index()]
         key, user, password = self.key.get_text(), self.user.get_text(), self.password.get_text()
-        if not all((key, user, password)):
-            self.status.set_text('Preencha chave, usuário e senha em Conta.')
+        if file.get('provider') == 'opensubtitles' and not all((key, user, password)):
+            self.status.set_text('Para esta fonte, preencha chave, usuário e senha em Conta.')
             return
         def save(path):
             if path.exists():
                 self.status.set_text('O arquivo já existe. Escolha outro nome.')
                 return
-            self.run_task(lambda: service.download(file['file_id'], path, key, user, password), lambda p: self.status.set_text(f'Salva: {p}'))
+            self.run_task(lambda: service.download(file, path, key, user, password), lambda p: self.status.set_text(f'Salva: {p}'))
         if self.search_video:
             save(self.search_video.with_suffix('.' + self.search_language + '.srt'))
         else:
