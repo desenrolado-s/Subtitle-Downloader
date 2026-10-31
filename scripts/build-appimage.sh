@@ -4,6 +4,8 @@ cd "$(dirname "$0")/.."
 test -x dist/Legenda/Legenda
 mkdir -p build/Legenda.AppDir/usr/Legenda
 cp -a dist/Legenda/. build/Legenda.AppDir/usr/Legenda/
+# The bundled OpenSSL cannot rely on a certificate path from the build host.
+bash scripts/bundle-ca-certificates.sh build/Legenda.AppDir/usr/Legenda/_internal
 # Ship GTK typelibs so the AppImage does not require the distribution's
 # typelib packages (openSUSE keeps them separate from the GTK libraries).
 bash scripts/bundle-gtk-typelibs.sh build/Legenda.AppDir/usr/Legenda/_internal/gi_typelibs
@@ -27,4 +29,7 @@ RUN
 chmod +x build/Legenda.AppDir/AppRun
 curl --fail --location --retry 3 https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -o build/appimagetool.AppImage
 chmod +x build/appimagetool.AppImage
-ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 build/appimagetool.AppImage build/Legenda.AppDir Legenda-linux-x64.AppImage
+UPDATE_INFO=${APPIMAGE_UPDATE_INFO:-"zsync|https://github.com/desenrolado-s/Subtitle-Downloader/releases/latest/download/Legenda-linux-x64.AppImage.zsync"}
+ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 build/appimagetool.AppImage -u "$UPDATE_INFO" build/Legenda.AppDir Legenda-linux-x64.AppImage
+# The release workflow regenerates this file with the final asset name.
+rm -f Legenda-linux-x64.AppImage.zsync

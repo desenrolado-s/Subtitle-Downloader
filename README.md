@@ -2,7 +2,7 @@
 
 <h1>LEGENDA</h1>
 
-<p><strong>Baixe legendas do OpenSubtitles em uma interface GTK 4 nativa, rápida e sem distrações.</strong></p>
+<p><strong>Baixe legendas do OpenSubtitles e de fontes públicas em uma interface GTK 4 nativa, rápida e sem distrações.</strong></p>
 
 <p>
   <a href="https://github.com/desenrolado-s/Subtitle-Downloader/actions/workflows/gtk.yml"><img src="https://github.com/desenrolado-s/Subtitle-Downloader/actions/workflows/gtk.yml/badge.svg" alt="GTK migration validation"></a>
@@ -16,7 +16,7 @@
 
 ## Visão geral
 
-LEGENDA é um aplicativo desktop para Linux que pesquisa e baixa legendas do catálogo do OpenSubtitles. A interface usa GTK 4 e executa as operações de rede em segundo plano, mantendo a janela responsiva.
+LEGENDA é um aplicativo desktop para Linux que pesquisa e baixa legendas do OpenSubtitles e de fontes públicas. A interface usa GTK 4 e executa as operações de rede em segundo plano, mantendo a janela responsiva.
 
 O vídeo nunca é enviado ao serviço. A busca usa o hash do arquivo quando ele está vinculado e, se necessário, recorre ao título.
 
@@ -35,7 +35,7 @@ O vídeo nunca é enviado ao serviço. A busca usa o hash do arquivo quando ele 
 - Python 3.12 ou superior.
 - GTK 4 e PyGObject.
 - `keyring` e um serviço Secret Service ativo, como GNOME Keyring ou KWallet, para salvar credenciais.
-- Conta e chave de API do OpenSubtitles.
+- Conta e chave de API do OpenSubtitles, apenas para o catálogo OpenSubtitles.
 
 ## Instalação
 
@@ -57,6 +57,23 @@ Instale as dependências do sistema conforme a sua distribuição:
 
 As bibliotecas GTK precisam vir do sistema. Em um ambiente virtual, use `--system-site-packages` para que o Python consiga importar o PyGObject.
 
+## Atualizações do AppImage
+
+Cada release publica um arquivo `.zsync` estável em:
+
+```text
+https://github.com/desenrolado-s/Subtitle-Downloader/releases/latest/download/Legenda-linux-x64.AppImage.zsync
+```
+
+O AppImage tem essa informação de atualização embutida, então é possível baixar apenas os blocos que mudaram com o `AppImageUpdate` ou o `appimageupdatetool` do projeto [AppImageUpdate](https://github.com/AppImageCommunity/AppImageUpdate/releases):
+
+```sh
+chmod +x appimageupdatetool-*.AppImage
+./appimageupdatetool-*.AppImage ./Legenda-linux-x64*.AppImage
+```
+
+Também é possível abrir o AppImage baixado na interface gráfica do `AppImageUpdate`.
+
 ## Configuração da conta
 
 1. Crie uma conta em [opensubtitles.com](https://www.opensubtitles.com).
@@ -65,6 +82,18 @@ As bibliotecas GTK precisam vir do sistema. Em um ambiente virtual, use `--syste
 4. Se quiser manter os dados entre sessões, use **Salvar no cofre**.
 
 A chave e o usuário também podem ser definidos pelas variáveis de ambiente `OPENSUBTITLES_API_KEY` e `OPENSUBTITLES_USERNAME`. A senha é solicitada apenas na interface e nunca é gravada em texto puro. Sem um cofre disponível, as credenciais valem somente para a sessão atual.
+
+## Fontes sem chave de API
+
+Para episódios de séries, o app também consulta o **Gestdown**, uma API pública que fornece legendas do catálogo Addic7ed por HTTPS, sem chave ou conta. Ela cobre os idiomas que você informar, inclusive `en`, `pt` e `pt-br`, conforme disponibilidade. Vincule um vídeo cujo nome contenha o episódio, por exemplo `Minha.Serie.S01E02.mkv`, ou pesquise por `Minha Série S01E02`.
+
+Também há o **Subtitulamos.tv**, fonte pública sem conta para episódios de TV em inglês e português (incluindo português brasileiro). Use `en`, `pt` ou `pt-br`; assim como no Gestdown, informe o episódio no título ou vincule um vídeo que tenha `S01E02` no nome.
+
+O **Podnapisi** complementa a busca pública com filmes e séries, sem chave, para inglês, português, japonês, espanhol, francês, alemão, italiano, coreano, russo e chinês. Os arquivos são verificados antes de serem salvos.
+
+Para animes, o app consulta o **AJATT / Kitsunekko**, catálogo público de legendas japonesas atualizado regularmente. Pesquise pelo título com o idioma `ja`; a fonte oferece arquivos `.srt` japoneses sem conta ou chave de API. Os resultados indicam a fonte e podem ser baixados sem preencher **Conta**.
+
+O Gestdown é voltado para episódios de TV e a disponibilidade varia por idioma e release. Para filmes ou buscas somente por título, configure a conta OpenSubtitles para acessar seu catálogo.
 
 ## Como usar
 
@@ -81,7 +110,7 @@ Com um vídeo vinculado, a legenda é salva ao lado dele no formato `filme.pt-br
 2. Se o hash não retornar resultados, a busca é feita pelo título.
 3. A lista mostra a primeira página de resultados, ordenada por número de downloads. Refine o título quando necessário.
 
-O download exige usuário e senha para autenticar no OpenSubtitles. O aplicativo recusa links que não usam HTTPS, valida o conteúdo como SRT e não sobrescreve legendas existentes.
+Downloads do OpenSubtitles exigem usuário e senha. Os resultados de Gestdown, Subtitulamos.tv, Podnapisi e AJATT não exigem credenciais. O aplicativo recusa links que não usam HTTPS, valida o conteúdo como SRT e não sobrescreve legendas existentes.
 
 A disponibilidade, a sincronização e os limites diários dependem do catálogo e do plano da conta no OpenSubtitles. Nenhum catálogo contém legendas para todos os vídeos.
 
@@ -93,6 +122,10 @@ A disponibilidade, a sincronização e os limites diários dependem do catálogo
 | `legenda/ui.py` | Janela GTK 4, diálogo de conta e coordenação das tarefas em segundo plano. |
 | `legenda/service.py` | Busca e download independentes da interface. |
 | `legenda/provider.py` | Cliente REST do OpenSubtitles e mensagens de erro. |
+| `legenda/gestdown.py` | Fonte pública Gestdown/Addic7ed para episódios de TV, sem chave de API. |
+| `legenda/subtitulamos.py` | Fonte pública Subtitulamos.tv para episódios em inglês e português, sem chave de API. |
+| `legenda/podnapisi.py` | Fonte pública multilíngue para filmes e séries, sem chave de API. |
+| `legenda/ajatt.py` | Catálogo AJATT/Kitsunekko de legendas japonesas para anime, sem chave de API. |
 | `legenda/files.py` | Hash do vídeo, validação do SRT e gravação atômica. |
 | `legenda/credentials.py` | Leitura e gravação das credenciais no Secret Service. |
 | `test_*.py` | Testes de arquivos, API, serviço, credenciais e interface GTK. |
@@ -129,6 +162,7 @@ python3 -m venv --system-site-packages .venv
   --hidden-import=gi.repository.Gdk \
   --hidden-import=gi.repository.Gio \
   --hidden-import=gi.repository.GLib app.py
+bash scripts/bundle-ca-certificates.sh dist/Legenda/_internal
 ```
 
 O resultado fica em `dist/Legenda`. Para gerar o AppImage no Ubuntu 22.04:
@@ -140,6 +174,14 @@ bash scripts/build-appimage.sh
 O script produz `Legenda-linux-x64.AppImage` e baixa a versão `continuous` do `appimagetool`, que não é fixada por hash. O workflow `gtk.yml` executa os testes, empacota o aplicativo, testa o binário e publica o artefato `Legenda-GTK-linux-x64.AppImage`.
 
 O workflow `build.yml` executa os testes e empacota Linux x64 e macOS ARM64. Tags `v*` publicam os pacotes em uma GitHub Release.
+
+Os nomes dos arquivos publicados incluem a tag da release, por exemplo `Legenda-linux-x64-v2.0.3.AppImage`. O link direto da release mais recente também usa esse nome:
+
+```text
+https://github.com/desenrolado-s/Subtitle-Downloader/releases/latest/download/Legenda-linux-x64-v2.0.3.AppImage
+```
+
+Substitua `v2.0.3` pela tag exibida na release desejada.
 
 ## Estado atual e limitações
 
