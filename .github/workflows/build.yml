@@ -134,6 +134,8 @@ jobs:
             cd /tmp
             Xvfb :99 -screen 0 1280x900x24 &
             export DISPLAY=:99
+            # Use the software renderer for the headless Xvfb smoke test.
+            export GSK_RENDERER=cairo
             sleep 2
             if command -v dbus-run-session >/dev/null; then
               dbus-run-session -- timeout 60 ./Legenda/Legenda --smoke-test
