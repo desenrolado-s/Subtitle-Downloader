@@ -141,6 +141,14 @@ O script produz `Legenda-linux-x64.AppImage` e baixa a versão `continuous` do `
 
 O workflow `build.yml` executa os testes e empacota Linux x64 e macOS ARM64. Tags `v*` publicam os pacotes em uma GitHub Release.
 
+Os nomes dos arquivos publicados incluem a tag da release, por exemplo `Legenda-linux-x64-v2.0.3.AppImage`. O link direto da release mais recente também usa esse nome:
+
+```text
+https://github.com/desenrolado-s/Subtitle-Downloader/releases/latest/download/Legenda-linux-x64-v2.0.3.AppImage
+```
+
+Substitua `v2.0.3` pela tag exibida na release desejada.
+
 ## Estado atual e limitações
 
 - A interface GTK é a versão atual. O empacotamento oficial cobre Linux x64 e macOS ARM64; Windows não é suportado no momento.
