@@ -121,7 +121,7 @@ jobs:
               dnf install -y xorg-x11-server-Xvfb xorg-x11-xauth python3-gobject gtk4 gobject-introspection ca-certificates tar dbus-daemon
             elif command -v zypper >/dev/null; then
               zypper --non-interactive refresh
-              zypper --non-interactive install --no-recommends xorg-x11-server-Xvfb xauth python3-gobject-Gdk gtk4 typelib-1_0-Gtk-4_0 gobject-introspection ca-certificates tar dbus-1
+              zypper --non-interactive install --no-recommends xorg-x11-server-Xvfb xauth python3-gobject-Gdk gtk4 typelib-1_0-Gtk-4_0 gobject-introspection ca-certificates tar dbus-1 dbus-1-daemon
               # The Tumbleweed GTK renderer needs a software GL backend under Xvfb.
               export LIBGL_ALWAYS_SOFTWARE=1
               export GALLIUM_DRIVER=llvmpipe
@@ -140,7 +140,10 @@ jobs:
               ./Legenda.AppImage --appimage-extract >/dev/null
               dbus-run-session -- timeout 60 ./squashfs-root/AppRun --smoke-test
             elif command -v dbus-daemon >/dev/null; then
-              dbus-uuidgen --ensure=/etc/machine-id --force
+              # Tumbleweed's base image contains an empty machine-id file.
+              rm -f /etc/machine-id /var/lib/dbus/machine-id
+              dbus-uuidgen --ensure=/etc/machine-id
+              ln -s /etc/machine-id /var/lib/dbus/machine-id
               export DBUS_SESSION_BUS_ADDRESS="$(dbus-daemon --session --fork --print-address=1 --print-pid=1 | sed -n '1p')"
               timeout 60 ./Legenda/Legenda --smoke-test
               ./Legenda.AppImage --appimage-extract >/dev/null
