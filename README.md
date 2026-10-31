@@ -9,14 +9,14 @@
   <a href="https://github.com/desenrolado-s/Subtitle-Downloader/releases/latest"><img src="https://img.shields.io/github/v/release/desenrolado-s/Subtitle-Downloader?label=release" alt="Última release"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white" alt="Python 3.12+"></a>
   <a href="https://www.gtk.org/"><img src="https://img.shields.io/badge/GTK-4-4A86CF?logo=gtk&logoColor=white" alt="GTK 4"></a>
-  <a href="#requisitos"><img src="https://img.shields.io/badge/platform-Linux-FCC624?logo=linux&logoColor=black" alt="Linux"></a>
+  <a href="#requisitos"><img src="https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-3776AB" alt="Linux, macOS e Windows"></a>
 </p>
 
 </div>
 
 ## Visão geral
 
-LEGENDA é um aplicativo desktop para Linux que pesquisa e baixa legendas do OpenSubtitles e de fontes públicas. A interface usa GTK 4 e executa as operações de rede em segundo plano, mantendo a janela responsiva.
+LEGENDA é um aplicativo desktop para Linux, macOS e Windows que pesquisa e baixa legendas do OpenSubtitles e de fontes públicas. A interface usa GTK 4 e executa as operações de rede em segundo plano, mantendo a janela responsiva.
 
 O vídeo nunca é enviado ao serviço. A busca usa o hash do arquivo quando ele está vinculado e, se necessário, recorre ao título.
 
@@ -26,15 +26,15 @@ O vídeo nunca é enviado ao serviço. A busca usa o hash do arquivo quando ele 
 - Vínculo opcional de um arquivo de vídeo local.
 - Filtro por idioma, como `pt-br`, `pt`, `en` e `es`.
 - Download em SRT com validação de conteúdo e gravação atômica.
-- Credenciais guardadas no cofre Secret Service do sistema.
+- Credenciais guardadas no cofre seguro do sistema.
 - Interface escura, minimalista e nativa em GTK 4.
 
 ## Requisitos
 
-- Linux com X11 ou Wayland.
+- Linux com X11 ou Wayland, macOS ou Windows 10/11 64 bits.
 - Python 3.12 ou superior.
 - GTK 4 e PyGObject.
-- `keyring` e um serviço Secret Service ativo, como GNOME Keyring ou KWallet, para salvar credenciais.
+- `keyring` e um cofre de credenciais do sistema. No Linux, use Secret Service, como GNOME Keyring ou KWallet.
 - Conta e chave de API do OpenSubtitles, apenas para o catálogo OpenSubtitles.
 
 ## Instalação
@@ -127,7 +127,7 @@ A disponibilidade, a sincronização e os limites diários dependem do catálogo
 | `legenda/podnapisi.py` | Fonte pública multilíngue para filmes e séries, sem chave de API. |
 | `legenda/ajatt.py` | Catálogo AJATT/Kitsunekko de legendas japonesas para anime, sem chave de API. |
 | `legenda/files.py` | Hash do vídeo, validação do SRT e gravação atômica. |
-| `legenda/credentials.py` | Leitura e gravação das credenciais no Secret Service. |
+| `legenda/credentials.py` | Leitura e gravação das credenciais no cofre seguro do sistema. |
 | `test_*.py` | Testes de arquivos, API, serviço, credenciais e interface GTK. |
 | `packaging/linux/` | Arquivo `.desktop` e ícones do aplicativo. |
 | `scripts/build-appimage.sh` | Empacotamento do AppImage. |
@@ -173,7 +173,7 @@ bash scripts/build-appimage.sh
 
 O script produz `Legenda-linux-x64.AppImage` e baixa a versão `continuous` do `appimagetool`, que não é fixada por hash. O workflow `gtk.yml` executa os testes, empacota o aplicativo, testa o binário e publica o artefato `Legenda-GTK-linux-x64.AppImage`.
 
-O workflow `build.yml` executa os testes e empacota Linux x64 e macOS ARM64. Tags `v*` publicam os pacotes em uma GitHub Release.
+O workflow `build.yml` executa os testes e empacota Linux x64, macOS ARM64 e Windows x64. Tags `v*` publicam os pacotes em uma GitHub Release.
 
 Os nomes dos arquivos publicados incluem a tag da release, por exemplo `Legenda-linux-x64-v2.0.3.AppImage`. O link direto da release mais recente também usa esse nome:
 
