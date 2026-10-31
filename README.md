@@ -57,6 +57,23 @@ Instale as dependências do sistema conforme a sua distribuição:
 
 As bibliotecas GTK precisam vir do sistema. Em um ambiente virtual, use `--system-site-packages` para que o Python consiga importar o PyGObject.
 
+## Atualizações do AppImage
+
+Cada release publica um arquivo `.zsync` estável em:
+
+```text
+https://github.com/desenrolado-s/Subtitle-Downloader/releases/latest/download/Legenda-linux-x64.AppImage.zsync
+```
+
+O AppImage tem essa informação de atualização embutida, então é possível baixar apenas os blocos que mudaram com o `AppImageUpdate` ou o `appimageupdatetool` do projeto [AppImageUpdate](https://github.com/AppImageCommunity/AppImageUpdate/releases):
+
+```sh
+chmod +x appimageupdatetool-*.AppImage
+./appimageupdatetool-*.AppImage ./Legenda-linux-x64*.AppImage
+```
+
+Também é possível abrir o AppImage baixado na interface gráfica do `AppImageUpdate`.
+
 ## Configuração da conta
 
 1. Crie uma conta em [opensubtitles.com](https://www.opensubtitles.com).

@@ -201,6 +201,19 @@ jobs:
           test -s "Legenda-linux-x64-${RELEASE_TAG}.tar.gz"
           test -s "Legenda-macos-arm64-${RELEASE_TAG}.tar.gz"
           sha256sum Legenda-* > SHA256SUMS.txt
+      - name: Install zsync
+        run: sudo apt-get update && sudo apt-get install -y zsync
+      - name: Generate AppImage zsync update file
+        working-directory: release-assets
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          appimage="$(ls Legenda-linux-x64*.AppImage)"
+          test -n "$appimage"
+          url="https://github.com/${GH_REPO}/releases/download/${RELEASE_TAG}/$(basename "$appimage")"
+          zsyncmake -u "$url" -o Legenda-linux-x64.AppImage.zsync "$appimage"
+          test -s Legenda-linux-x64.AppImage.zsync
       - name: Publish all packages
         env:
           GH_TOKEN: ${{ github.token }}
