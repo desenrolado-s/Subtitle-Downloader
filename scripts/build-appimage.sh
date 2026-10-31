@@ -4,6 +4,9 @@ cd "$(dirname "$0")/.."
 test -x dist/Legenda/Legenda
 mkdir -p build/Legenda.AppDir/usr/Legenda
 cp -a dist/Legenda/. build/Legenda.AppDir/usr/Legenda/
+# Ship GTK typelibs so the AppImage does not require the distribution's
+# typelib packages (openSUSE keeps them separate from the GTK libraries).
+bash scripts/bundle-gtk-typelibs.sh build/Legenda.AppDir/usr/Legenda/_internal/gi_typelibs
 # GI uses the host GTK/GLib stack.  Keeping the Ubuntu copies of these base
 # libraries makes the AppImage incompatible with newer distributions.
 find build/Legenda.AppDir \( -name "libglib-2.0.so*" -o -name "libgobject-2.0.so*" -o -name "libgio-2.0.so*" -o -name "libgmodule-2.0.so*" -o -name "libgirepository-*.so*" -o -name "libmount.so*" -o -name "libblkid.so*" -o -name "libuuid.so*" -o -name "libsystemd.so*" -o -name "libudev.so*" \) -delete
