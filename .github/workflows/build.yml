@@ -51,6 +51,7 @@ jobs:
         run: |
           pacman -S --needed --noconfirm \
             mingw-w64-ucrt-x86_64-python \
+            mingw-w64-ucrt-x86_64-python-pip \
             mingw-w64-ucrt-x86_64-python-gobject \
             mingw-w64-ucrt-x86_64-gtk4
           python -m pip install --upgrade pip
