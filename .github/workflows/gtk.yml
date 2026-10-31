@@ -26,7 +26,7 @@ jobs:
       - name: Package GTK application
         run: |
           .venv/bin/python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda --hidden-import=keyring.backends.SecretService --hidden-import=gi.repository.Gtk --hidden-import=gi.repository.Gdk --hidden-import=gi.repository.Gio --hidden-import=gi.repository.GLib app.py
-          find dist/Legenda -name "libglib-2.0.so*" -o -name "libgobject-2.0.so*" -o -name "libgio-2.0.so*" -o -name "libgmodule-2.0.so*" -o -name "libgirepository-*.so*" | xargs -r rm -f
+          find dist/Legenda \( -name "libglib-2.0.so*" -o -name "libgobject-2.0.so*" -o -name "libgio-2.0.so*" -o -name "libgmodule-2.0.so*" -o -name "libgirepository-*.so*" -o -name "libffi.so*" -o -name "libpcre2-*.so*" -o -name "libstdc++.so*" -o -name "libgcc_s.so*" -o -name "libmount.so*" -o -name "libblkid.so*" -o -name "libuuid.so*" -o -name "libsystemd.so*" -o -name "libudev.so*" \) -delete
           rm -rf dist/Legenda/_internal/gio_modules dist/Legenda/gio_modules
       - name: Test packaged GTK application
         timeout-minutes: 2

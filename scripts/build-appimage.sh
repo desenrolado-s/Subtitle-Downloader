@@ -6,7 +6,7 @@ mkdir -p build/Legenda.AppDir/usr/Legenda
 cp -a dist/Legenda/. build/Legenda.AppDir/usr/Legenda/
 # GI uses the host GTK/GLib stack.  Keeping the Ubuntu copies of these base
 # libraries makes the AppImage incompatible with newer distributions.
-find build/Legenda.AppDir \( -name "libglib-2.0.so*" -o -name "libgobject-2.0.so*" -o -name "libgio-2.0.so*" -o -name "libgmodule-2.0.so*" -o -name "libgirepository-*.so*" -o -name "libmount.so*" -o -name "libblkid.so*" -o -name "libuuid.so*" -o -name "libsystemd.so*" -o -name "libudev.so*" \) -delete
+find build/Legenda.AppDir \( -name "libglib-2.0.so*" -o -name "libgobject-2.0.so*" -o -name "libgio-2.0.so*" -o -name "libgmodule-2.0.so*" -o -name "libgirepository-*.so*" -o -name "libffi.so*" -o -name "libpcre2-*.so*" -o -name "libstdc++.so*" -o -name "libgcc_s.so*" -o -name "libmount.so*" -o -name "libblkid.so*" -o -name "libuuid.so*" -o -name "libsystemd.so*" -o -name "libudev.so*" \) -delete
 rm -rf build/Legenda.AppDir/usr/Legenda/_internal/gio_modules build/Legenda.AppDir/usr/Legenda/gio_modules
 cp packaging/linux/legenda.desktop packaging/linux/legenda.png build/Legenda.AppDir/
 cp packaging/linux/legenda.png build/Legenda.AppDir/.DirIcon
