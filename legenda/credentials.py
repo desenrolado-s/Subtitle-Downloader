@@ -1,13 +1,17 @@
-"""Store credentials exclusively in the Linux Secret Service vault."""
+"""Store credentials in the operating system's secure credential vault."""
 import json
+import sys
 
 SERVICE = 'io.github.desenrolado_s.Legenda'
 ACCOUNT = 'opensubtitles'
 
 
 def backend():
-    from keyring.backends.SecretService import Keyring
-    return Keyring()
+    if sys.platform == 'linux':
+        from keyring.backends.SecretService import Keyring
+        return Keyring()
+    import keyring
+    return keyring.get_keyring()
 
 
 def load():

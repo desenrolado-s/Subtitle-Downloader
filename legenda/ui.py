@@ -151,7 +151,7 @@ class App(Gtk.Application):
         try:
             credentials.save(*values)
         except Exception:
-            self.account_status.set_text('Não foi possível salvar. Desbloqueie o cofre Secret Service do sistema e tente novamente.')
+            self.account_status.set_text('Não foi possível salvar. Desbloqueie o cofre de credenciais do sistema e tente novamente.')
         else:
             self.account_status.set_text('Credenciais salvas no cofre do sistema.')
 

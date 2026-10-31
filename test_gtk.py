@@ -1,7 +1,14 @@
 """GTK integration checks; run with a graphical display or xvfb-run."""
+import sys
 import unittest
 from unittest.mock import patch
 from uuid import uuid4
+
+# GitHub's Windows runners do not expose an interactive desktop to GTK.  The
+# executable is still built there; UI integration is covered on Linux/macOS.
+if sys.platform == 'win32':
+    raise unittest.SkipTest('GTK integration tests require an interactive Windows desktop')
+
 try:
     from legenda.ui import App, Gtk, Gdk
 except ModuleNotFoundError as error:
