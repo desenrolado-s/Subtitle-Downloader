@@ -35,7 +35,7 @@ jobs:
       - name: Create and test GTK AppImage
         timeout-minutes: 5
         run: |
-          bash scripts/build-appimage.sh
+          APPIMAGE_VERSION=0.0.0 bash scripts/build-appimage.sh
           dbus-run-session -- xvfb-run -a ./Legenda-linux-x64.AppImage --appimage-extract-and-run --smoke-test
           mv Legenda-linux-x64.AppImage Legenda-GTK-linux-x64.AppImage
       - uses: actions/upload-artifact@v4
