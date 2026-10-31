@@ -101,7 +101,7 @@ jobs:
         run: |
           python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda \
             --collect-all gi \
-            --add-data "/ucrt64/share/glib-2.0/schemas:share/glib-2.0/schemas" \
+            --add-data "$(cygpath -w /ucrt64/share/glib-2.0/schemas);share/glib-2.0/schemas" \
             --hidden-import=gi.repository.Gtk \
             --hidden-import=gi.repository.Gdk \
             --hidden-import=gi.repository.Gio \
