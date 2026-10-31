@@ -180,12 +180,26 @@ jobs:
           pattern: Legenda-*
           merge-multiple: true
           path: release-assets
+      - name: Include release version in asset names
+        working-directory: release-assets
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          for file in Legenda-linux-x64.AppImage Legenda-linux-x64.tar.gz Legenda-macos-arm64.tar.gz; do
+            test -s "$file"
+            case "$file" in
+              *.tar.gz) mv "$file" "${file%.tar.gz}-${RELEASE_TAG}.tar.gz" ;;
+              *) mv "$file" "${file%.*}-${RELEASE_TAG}.${file##*.}" ;;
+            esac
+          done
       - name: Validate packages and generate checksums
         working-directory: release-assets
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          test -s Legenda-linux-x64.AppImage
-          test -s Legenda-linux-x64.tar.gz
-          test -s Legenda-macos-arm64.tar.gz
+          test -s "Legenda-linux-x64-${RELEASE_TAG}.AppImage"
+          test -s "Legenda-linux-x64-${RELEASE_TAG}.tar.gz"
+          test -s "Legenda-macos-arm64-${RELEASE_TAG}.tar.gz"
           sha256sum Legenda-* > SHA256SUMS.txt
       - name: Publish all packages
         env:
