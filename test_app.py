@@ -18,7 +18,7 @@ class Tests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 save_subtitle(path, SRT + b'changed')
             self.assertEqual(path.read_bytes(), SRT)
-            self.assertEqual(list(Path(directory).iterdir()), [path])
+            self.assertEqual([item.name for item in Path(directory).iterdir()], [path.name])
 
     def test_reject_html(self):
         with tempfile.TemporaryDirectory() as directory:
