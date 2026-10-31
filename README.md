@@ -162,6 +162,7 @@ python3 -m venv --system-site-packages .venv
   --hidden-import=gi.repository.Gdk \
   --hidden-import=gi.repository.Gio \
   --hidden-import=gi.repository.GLib app.py
+bash scripts/bundle-ca-certificates.sh dist/Legenda/_internal
 ```
 
 O resultado fica em `dist/Legenda`. Para gerar o AppImage no Ubuntu 22.04:

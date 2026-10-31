@@ -51,6 +51,7 @@ jobs:
           /usr/bin/python3 -m venv --system-site-packages .venv
           .venv/bin/python -m pip install -r requirements-build.txt
           .venv/bin/python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda --hidden-import=keyring.backends.SecretService --hidden-import=gi.repository.Gtk --hidden-import=gi.repository.Gdk --hidden-import=gi.repository.Gio --hidden-import=gi.repository.GLib app.py
+          bash scripts/bundle-ca-certificates.sh dist/Legenda/_internal
           # GI uses the host GTK/GLib stack.  Do not let PyInstaller's copies
           # of the platform base libraries override that stack on other distros.
           find dist/Legenda \( -name "libglib-2.0.so*" -o -name "libgobject-2.0.so*" -o -name "libgio-2.0.so*" -o -name "libgmodule-2.0.so*" -o -name "libgirepository-*.so*" -o -name "libmount.so*" -o -name "libblkid.so*" -o -name "libuuid.so*" -o -name "libsystemd.so*" -o -name "libudev.so*" \) -delete
@@ -144,6 +145,7 @@ jobs:
             export GTK_A11Y=none
             sleep 2
             ./Legenda.AppImage --appimage-extract >/dev/null
+            test -s squashfs-root/usr/Legenda/_internal/certs/ca-certificates.crt
             test -s squashfs-root/usr/Legenda/_internal/gi_typelibs/Gtk-4.0.typelib
             test -s squashfs-root/usr/Legenda/_internal/gi_typelibs/Graphene-1.0.typelib
             if command -v dbus-run-session >/dev/null; then

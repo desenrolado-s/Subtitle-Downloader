@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 import sys
+from legenda.certificates import configure_ssl_certificates
+
+# Must run before importing GTK/urllib.  The frozen AppImage carries OpenSSL
+# but not the build machine's certificate path.
+configure_ssl_certificates()
+
 from legenda.ui import App, Gtk, Gdk
 
 if __name__ == '__main__':

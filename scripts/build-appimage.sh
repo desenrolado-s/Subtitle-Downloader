@@ -4,6 +4,8 @@ cd "$(dirname "$0")/.."
 test -x dist/Legenda/Legenda
 mkdir -p build/Legenda.AppDir/usr/Legenda
 cp -a dist/Legenda/. build/Legenda.AppDir/usr/Legenda/
+# The bundled OpenSSL cannot rely on a certificate path from the build host.
+bash scripts/bundle-ca-certificates.sh build/Legenda.AppDir/usr/Legenda/_internal
 # Ship GTK typelibs so the AppImage does not require the distribution's
 # typelib packages (openSUSE keeps them separate from the GTK libraries).
 bash scripts/bundle-gtk-typelibs.sh build/Legenda.AppDir/usr/Legenda/_internal/gi_typelibs
