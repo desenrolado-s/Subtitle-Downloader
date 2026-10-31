@@ -122,7 +122,7 @@ jobs:
             elif command -v zypper >/dev/null; then
               zypper --non-interactive refresh
               zypper --non-interactive install --no-recommends xorg-x11-server-Xvfb xauth python3-gobject-Gdk gtk4 typelib-1_0-Gtk-4_0 gobject-introspection ca-certificates tar dbus-1
-              # Tumbleweed's GTK renderer needs a software GL backend under Xvfb.
+              # The Tumbleweed GTK renderer needs a software GL backend under Xvfb.
               export LIBGL_ALWAYS_SOFTWARE=1
               export GALLIUM_DRIVER=llvmpipe
             else
