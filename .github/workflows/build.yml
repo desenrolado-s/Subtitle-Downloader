@@ -140,7 +140,7 @@ jobs:
               ./Legenda.AppImage --appimage-extract >/dev/null
               dbus-run-session -- timeout 60 ./squashfs-root/AppRun --smoke-test
             elif command -v dbus-daemon >/dev/null; then
-              # Tumbleweed's base image contains an empty machine-id file.
+              # The Tumbleweed base image contains an empty machine-id file.
               rm -f /etc/machine-id /var/lib/dbus/machine-id
               dbus-uuidgen --ensure=/etc/machine-id
               ln -s /etc/machine-id /var/lib/dbus/machine-id
