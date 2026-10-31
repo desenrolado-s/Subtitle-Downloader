@@ -3,19 +3,19 @@ import urllib.parse
 import urllib.request
 from .provider import api
 from .files import movie_hash, save_subtitle
-from . import gestdown
+from . import ajatt, gestdown
 
 
 def search(title, video, language, key):
-    try:
-        results = gestdown.search(title, video, language)
-    except RuntimeError:
-        # A temporary outage in the keyless source must not hide OpenSubtitles
-        # results when the user has configured that source.
-        if not key:
-            raise
-        results = []
+    results, errors = [], []
+    for provider in (gestdown, ajatt):
+        try:
+            results.extend(provider.search(title, video, language))
+        except RuntimeError as error:
+            errors.append(error)
     if not key:
+        if errors and not results:
+            raise errors[0]
         return results
     params = {'languages': language, 'order_by': 'download_count', 'order_direction': 'desc'}
     rows = []
@@ -31,6 +31,8 @@ def search(title, video, language, key):
 def download(result, target, key='', user='', password=''):
     if result.get('provider') == 'gestdown':
         return save_subtitle(target, gestdown.download(result))
+    if result.get('provider') == 'ajatt':
+        return save_subtitle(target, ajatt.download(result))
     file_id = result['file_id']
     token = api('login', key, {'username': user, 'password': password})['token']
     link = api('download', key, {'file_id': file_id, 'sub_format': 'srt'}, token)['link']

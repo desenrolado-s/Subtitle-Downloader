@@ -85,7 +85,9 @@ A chave e o usuário também podem ser definidos pelas variáveis de ambiente `O
 
 ## Fontes sem chave de API
 
-Para episódios de séries, o app também consulta o **Gestdown**, uma API pública que fornece legendas do catálogo Addic7ed por HTTPS, sem chave ou conta. Vincule um vídeo cujo nome contenha o episódio, por exemplo `Minha.Serie.S01E02.mkv`, ou pesquise por `Minha Série S01E02`. Os resultados indicam a fonte e podem ser baixados sem preencher **Conta**.
+Para episódios de séries, o app também consulta o **Gestdown**, uma API pública que fornece legendas do catálogo Addic7ed por HTTPS, sem chave ou conta. Vincule um vídeo cujo nome contenha o episódio, por exemplo `Minha.Serie.S01E02.mkv`, ou pesquise por `Minha Série S01E02`.
+
+Para animes, o app consulta o **AJATT / Kitsunekko**, catálogo público de legendas japonesas atualizado regularmente. Pesquise pelo título com o idioma `ja`; a fonte oferece arquivos `.srt` japoneses sem conta ou chave de API. Os resultados indicam a fonte e podem ser baixados sem preencher **Conta**.
 
 O Gestdown é voltado para episódios de TV e a disponibilidade varia por idioma e release. Para filmes ou buscas somente por título, configure a conta OpenSubtitles para acessar seu catálogo.
 
@@ -117,6 +119,7 @@ A disponibilidade, a sincronização e os limites diários dependem do catálogo
 | `legenda/service.py` | Busca e download independentes da interface. |
 | `legenda/provider.py` | Cliente REST do OpenSubtitles e mensagens de erro. |
 | `legenda/gestdown.py` | Fonte pública Gestdown/Addic7ed para episódios de TV, sem chave de API. |
+| `legenda/ajatt.py` | Catálogo AJATT/Kitsunekko de legendas japonesas para anime, sem chave de API. |
 | `legenda/files.py` | Hash do vídeo, validação do SRT e gravação atômica. |
 | `legenda/credentials.py` | Leitura e gravação das credenciais no Secret Service. |
 | `test_*.py` | Testes de arquivos, API, serviço, credenciais e interface GTK. |
