@@ -85,7 +85,11 @@ A chave e o usuário também podem ser definidos pelas variáveis de ambiente `O
 
 ## Fontes sem chave de API
 
-Para episódios de séries, o app também consulta o **Gestdown**, uma API pública que fornece legendas do catálogo Addic7ed por HTTPS, sem chave ou conta. Vincule um vídeo cujo nome contenha o episódio, por exemplo `Minha.Serie.S01E02.mkv`, ou pesquise por `Minha Série S01E02`.
+Para episódios de séries, o app também consulta o **Gestdown**, uma API pública que fornece legendas do catálogo Addic7ed por HTTPS, sem chave ou conta. Ela cobre os idiomas que você informar, inclusive `en`, `pt` e `pt-br`, conforme disponibilidade. Vincule um vídeo cujo nome contenha o episódio, por exemplo `Minha.Serie.S01E02.mkv`, ou pesquise por `Minha Série S01E02`.
+
+Também há o **Subtitulamos.tv**, fonte pública sem conta para episódios de TV em inglês e português (incluindo português brasileiro). Use `en`, `pt` ou `pt-br`; assim como no Gestdown, informe o episódio no título ou vincule um vídeo que tenha `S01E02` no nome.
+
+O **Podnapisi** complementa a busca pública com filmes e séries, sem chave, para inglês, português, japonês, espanhol, francês, alemão, italiano, coreano, russo e chinês. Os arquivos são verificados antes de serem salvos.
 
 Para animes, o app consulta o **AJATT / Kitsunekko**, catálogo público de legendas japonesas atualizado regularmente. Pesquise pelo título com o idioma `ja`; a fonte oferece arquivos `.srt` japoneses sem conta ou chave de API. Os resultados indicam a fonte e podem ser baixados sem preencher **Conta**.
 
@@ -106,7 +110,7 @@ Com um vídeo vinculado, a legenda é salva ao lado dele no formato `filme.pt-br
 2. Se o hash não retornar resultados, a busca é feita pelo título.
 3. A lista mostra a primeira página de resultados, ordenada por número de downloads. Refine o título quando necessário.
 
-Downloads do OpenSubtitles exigem usuário e senha. Os resultados do Gestdown não exigem credenciais. O aplicativo recusa links que não usam HTTPS, valida o conteúdo como SRT e não sobrescreve legendas existentes.
+Downloads do OpenSubtitles exigem usuário e senha. Os resultados de Gestdown, Subtitulamos.tv, Podnapisi e AJATT não exigem credenciais. O aplicativo recusa links que não usam HTTPS, valida o conteúdo como SRT e não sobrescreve legendas existentes.
 
 A disponibilidade, a sincronização e os limites diários dependem do catálogo e do plano da conta no OpenSubtitles. Nenhum catálogo contém legendas para todos os vídeos.
 
@@ -119,6 +123,8 @@ A disponibilidade, a sincronização e os limites diários dependem do catálogo
 | `legenda/service.py` | Busca e download independentes da interface. |
 | `legenda/provider.py` | Cliente REST do OpenSubtitles e mensagens de erro. |
 | `legenda/gestdown.py` | Fonte pública Gestdown/Addic7ed para episódios de TV, sem chave de API. |
+| `legenda/subtitulamos.py` | Fonte pública Subtitulamos.tv para episódios em inglês e português, sem chave de API. |
+| `legenda/podnapisi.py` | Fonte pública multilíngue para filmes e séries, sem chave de API. |
 | `legenda/ajatt.py` | Catálogo AJATT/Kitsunekko de legendas japonesas para anime, sem chave de API. |
 | `legenda/files.py` | Hash do vídeo, validação do SRT e gravação atômica. |
 | `legenda/credentials.py` | Leitura e gravação das credenciais no Secret Service. |

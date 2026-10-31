@@ -69,7 +69,7 @@ class App(Gtk.Application):
             getattr(self.body, 'set_margin_' + side)(28)
         self.window.set_child(self.body)
         self.body.append(self.label('Encontre a legenda certa.', 'title'))
-        self.body.append(self.label('Busque pelo título. Para séries sem chave de API, use um vídeo ou título com S01E02.', 'muted'))
+        self.body.append(self.label('Podnapisi busca filmes e séries em vários idiomas sem chave. Gestdown/Subtitulamos.tv pedem S01E02; AJATT atende anime em japonês.', 'muted'))
         self.query = Gtk.Entry(placeholder_text='Nome do filme ou série')
         self.query.connect('activate', lambda _: self.search())
         self.body.append(self.query)
