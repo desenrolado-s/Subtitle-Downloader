@@ -99,13 +99,18 @@ jobs:
         if: runner.os == 'Windows'
         shell: msys2 {0}
         run: |
-          python -m PyInstaller --noconfirm --clean --onedir --windowed --name Legenda \
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name Legenda \
             --collect-all gi \
             --add-data "$(cygpath -w /ucrt64/share/glib-2.0/schemas);share/glib-2.0/schemas" \
             --hidden-import=gi.repository.Gtk \
             --hidden-import=gi.repository.Gdk \
             --hidden-import=gi.repository.Gio \
             --hidden-import=gi.repository.GLib app.py
+      - name: Smoke test Windows executable
+        if: runner.os == 'Windows'
+        shell: pwsh
+        timeout-minutes: 2
+        run: dist/Legenda.exe --smoke-test
       - name: Smoke test GTK executable
         if: runner.os == 'Linux'
         timeout-minutes: 2
@@ -120,10 +125,10 @@ jobs:
       - name: Archive macOS
         if: runner.os == 'macOS'
         run: tar -czf Legenda-${{ matrix.target }}.tar.gz -C dist Legenda.app
-      - name: Archive Windows
+      - name: Stage Windows executable
         if: runner.os == 'Windows'
         shell: pwsh
-        run: Compress-Archive -Path dist/Legenda/* -DestinationPath Legenda-${{ matrix.target }}.zip
+        run: Copy-Item dist/Legenda.exe Legenda-${{ matrix.target }}.exe
       - name: Build Linux AppImage
         if: runner.os == 'Linux'
         env:
@@ -229,7 +234,7 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          for file in Legenda-linux-x64.AppImage Legenda-linux-x64.tar.gz Legenda-macos-arm64.tar.gz Legenda-windows-x64.zip; do
+          for file in Legenda-linux-x64.AppImage Legenda-linux-x64.tar.gz Legenda-macos-arm64.tar.gz Legenda-windows-x64.exe; do
             test -s "$file"
             case "$file" in
               *.tar.gz) mv "$file" "${file%.tar.gz}-${RELEASE_TAG}.tar.gz" ;;
@@ -244,7 +249,7 @@ jobs:
           test -s "Legenda-linux-x64-${RELEASE_TAG}.AppImage"
           test -s "Legenda-linux-x64-${RELEASE_TAG}.tar.gz"
           test -s "Legenda-macos-arm64-${RELEASE_TAG}.tar.gz"
-          test -s "Legenda-windows-x64-${RELEASE_TAG}.zip"
+          test -s "Legenda-windows-x64-${RELEASE_TAG}.exe"
           sha256sum Legenda-* > SHA256SUMS.txt
       - name: Install zsync
         run: sudo apt-get update && sudo apt-get install -y zsync
