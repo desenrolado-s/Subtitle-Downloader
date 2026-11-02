@@ -120,6 +120,11 @@ jobs:
         shell: pwsh
         timeout-minutes: 2
         run: |
+          $env:PATH = ($env:PATH -split ';' | Where-Object { $_ -and $_ -notmatch '(?i)[\\/]msys64[\\/](ucrt64|usr)[\\/]bin' }) -join ';'
+          $env:MSYSTEM = ''
+          $env:MINGW_PREFIX = ''
+          $env:GI_TYPELIB_PATH = ''
+          $env:PYGI_DLL_PATH = ''
           $output = & dist/Legenda.exe --smoke-test 2>&1
           $exitCode = $LASTEXITCODE
           $output | ForEach-Object { Write-Host $_ }
