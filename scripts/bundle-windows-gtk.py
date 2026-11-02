@@ -33,8 +33,8 @@ def shared_libraries(gir_file: Path) -> list[str]:
     return [
         name.strip()
         for element in root.iter()
-        if element.tag.endswith('shared-library') and element.text
-        for name in element.text.split(',')
+        if element.attrib.get('shared-library')
+        for name in element.attrib['shared-library'].split(',')
         if name.strip()
     ]
 
