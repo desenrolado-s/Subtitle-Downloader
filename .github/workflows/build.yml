@@ -102,11 +102,12 @@ jobs:
         shell: msys2 {0}
         run: |
           python scripts/bundle-windows-gtk.py /ucrt64 build/windows-gtk-binaries
+          GTK_BIN_DIR="$(cygpath -m build/windows-gtk-binaries)"
           python -m PyInstaller --noconfirm --clean --onefile --windowed --name Legenda \
             --collect-all gi \
             --add-data "$(cygpath -w /ucrt64/share/glib-2.0/schemas);share/glib-2.0/schemas" \
             --add-data "$(cygpath -w /ucrt64/lib/girepository-1.0);gi_typelibs" \
-            --add-binary "$(cygpath -w build/windows-gtk-binaries/*.dll);." \
+            --add-binary "$GTK_BIN_DIR/*.dll;." \
             --hidden-import=gi.repository.Gtk \
             --hidden-import=gi.repository.Gdk \
             --hidden-import=gi.repository.Gio \
