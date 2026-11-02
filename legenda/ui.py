@@ -1,10 +1,14 @@
 """GTK 4 desktop interface."""
 import os
 import re
+import sys
 import threading
 from pathlib import Path
 
-for _path in ('/usr/lib64/girepository-1.0', '/usr/lib/girepository-1.0', '/usr/lib/x86_64-linux-gnu/girepository-1.0'):
+_bundled_typelibs = Path(getattr(sys, '_MEIPASS', '')) / 'gi_typelibs'
+_typelib_paths = [str(_bundled_typelibs)] if _bundled_typelibs.is_dir() else []
+_typelib_paths.extend(('/usr/lib64/girepository-1.0', '/usr/lib/girepository-1.0', '/usr/lib/x86_64-linux-gnu/girepository-1.0'))
+for _path in _typelib_paths:
     if os.path.isdir(_path):
         _current = os.environ.get('GI_TYPELIB_PATH', '')
         if _path not in _current.split(os.pathsep):
