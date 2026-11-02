@@ -69,7 +69,9 @@ jobs:
       - name: Windows tests
         if: runner.os == 'Windows'
         shell: msys2 {0}
-        run: python -m unittest discover -v
+        run: |
+          python -c 'import gi; gi.require_version("Gtk", "4.0"); from gi.repository import Gtk; print("GTK", Gtk.get_major_version(), Gtk.get_minor_version())'
+          python -m unittest discover -v
       - name: Build application
         if: runner.os == 'Linux'
         run: |
@@ -99,18 +101,37 @@ jobs:
         if: runner.os == 'Windows'
         shell: msys2 {0}
         run: |
+          python scripts/bundle-windows-gtk.py /ucrt64 build/windows-gtk-binaries
+          GTK_BIN_DIR="$(cygpath -m build/windows-gtk-binaries)"
           python -m PyInstaller --noconfirm --clean --onefile --windowed --name Legenda \
             --collect-all gi \
             --add-data "$(cygpath -w /ucrt64/share/glib-2.0/schemas);share/glib-2.0/schemas" \
+            --add-data "$(cygpath -w /ucrt64/lib/girepository-1.0);gi_typelibs" \
+            --add-binary "$GTK_BIN_DIR/*.dll;." \
             --hidden-import=gi.repository.Gtk \
             --hidden-import=gi.repository.Gdk \
             --hidden-import=gi.repository.Gio \
             --hidden-import=gi.repository.GLib app.py
+          test -s /ucrt64/lib/girepository-1.0/Gtk-4.0.typelib
+          test -s /ucrt64/lib/girepository-1.0/Gdk-4.0.typelib
+          test -s /ucrt64/lib/girepository-1.0/Graphene-1.0.typelib
       - name: Smoke test Windows executable
         if: runner.os == 'Windows'
         shell: pwsh
         timeout-minutes: 2
-        run: dist/Legenda.exe --smoke-test
+        run: |
+          $env:PATH = ($env:PATH -split ';' | Where-Object { $_ -and $_ -notmatch '(?i)[\\/]msys64[\\/](ucrt64|usr)[\\/]bin' }) -join ';'
+          $env:MSYSTEM = ''
+          $env:MINGW_PREFIX = ''
+          $env:GI_TYPELIB_PATH = ''
+          $env:PYGI_DLL_PATH = ''
+          $output = & dist/Legenda.exe --smoke-test 2>&1
+          $exitCode = $LASTEXITCODE
+          $output | ForEach-Object { Write-Host $_ }
+          if ($exitCode -ne 0) { exit $exitCode }
+          if (($output | Out-String) -match 'Traceback \(most recent call last\)|Unhandled exception|AssertionError') {
+            throw 'GTK smoke test emitted a Python exception.'
+          }
       - name: Smoke test GTK executable
         if: runner.os == 'Linux'
         timeout-minutes: 2
