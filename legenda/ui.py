@@ -14,6 +14,12 @@ for _path in _typelib_paths:
         if _path not in _current.split(os.pathsep):
             os.environ['GI_TYPELIB_PATH'] = f'{_path}{os.pathsep}{_current}' if _current else _path
 
+if getattr(sys, 'frozen', False) and sys.platform == 'win32':
+    _bundled_dll_dir = str(Path(sys._MEIPASS))
+    _dll_paths = os.environ.get('PYGI_DLL_PATH', '').split(os.pathsep)
+    if _bundled_dll_dir not in _dll_paths:
+        os.environ['PYGI_DLL_PATH'] = os.pathsep.join([_bundled_dll_dir, *filter(None, _dll_paths)])
+
 import gi
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, Gdk, GLib

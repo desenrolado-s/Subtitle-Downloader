@@ -101,10 +101,12 @@ jobs:
         if: runner.os == 'Windows'
         shell: msys2 {0}
         run: |
+          python scripts/bundle-windows-gtk.py /ucrt64 build/windows-gtk-binaries
           python -m PyInstaller --noconfirm --clean --onefile --windowed --name Legenda \
             --collect-all gi \
             --add-data "$(cygpath -w /ucrt64/share/glib-2.0/schemas);share/glib-2.0/schemas" \
             --add-data "$(cygpath -w /ucrt64/lib/girepository-1.0);gi_typelibs" \
+            --add-binary "$(cygpath -w build/windows-gtk-binaries/*.dll);." \
             --hidden-import=gi.repository.Gtk \
             --hidden-import=gi.repository.Gdk \
             --hidden-import=gi.repository.Gio \
@@ -116,7 +118,14 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         timeout-minutes: 2
-        run: dist/Legenda.exe --smoke-test
+        run: |
+          $output = & dist/Legenda.exe --smoke-test 2>&1
+          $exitCode = $LASTEXITCODE
+          $output | ForEach-Object { Write-Host $_ }
+          if ($exitCode -ne 0) { exit $exitCode }
+          if (($output | Out-String) -match 'Traceback \(most recent call last\)|Unhandled exception|AssertionError') {
+            throw 'GTK smoke test emitted a Python exception.'
+          }
       - name: Smoke test GTK executable
         if: runner.os == 'Linux'
         timeout-minutes: 2
