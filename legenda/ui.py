@@ -176,6 +176,33 @@ class App(Gtk.Application):
             self.account_status.set_text('Credenciais removidas do cofre e desta sessão.')
 
     def chooser(self, save, callback):
+        # Gtk.FileChooserNative relies on the legacy file chooser settings
+        # schema. On some newer distributions (including openSUSE Tumbleweed)
+        # that schema does not contain the `view-type` key expected by GTK,
+        # and opening the native dialog aborts the whole process. Gtk.FileDialog
+        # uses the newer GTK 4.10 API and avoids that schema lookup.
+        if hasattr(Gtk, 'FileDialog'):
+            dialog = Gtk.FileDialog.new()
+            dialog.set_title('Salvar legenda' if save else 'Selecionar vídeo')
+            if save:
+                dialog.set_initial_name('legenda.' + self.search_language + '.srt')
+
+            def response(file_dialog, result):
+                try:
+                    file = file_dialog.save_finish(result) if save else file_dialog.open_finish(result)
+                    path = file.get_path() if file else None
+                except Exception as error:
+                    self.status.set_text(str(error))
+                    return
+                if path:
+                    callback(Path(path))
+
+            if save:
+                dialog.save(self.window, None, response)
+            else:
+                dialog.open(self.window, None, response)
+            return
+
         self.dialog = Gtk.FileChooserNative(title='Salvar legenda' if save else 'Selecionar vídeo', transient_for=self.window, action=Gtk.FileChooserAction.SAVE if save else Gtk.FileChooserAction.OPEN)
         if save:
             self.dialog.set_current_name('legenda.' + self.search_language + '.srt')
