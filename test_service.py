@@ -2,6 +2,7 @@
 import io
 import tempfile
 import unittest
+import urllib.error
 from pathlib import Path
 from unittest.mock import patch
 from legenda import service
@@ -30,6 +31,24 @@ class ServiceTests(unittest.TestCase):
             with patch('legenda.service.api', side_effect=[{'token': 'session'}, {'link': 'https://example.org/sub'}]), patch('urllib.request.urlopen', return_value=io.BytesIO(content)):
                 service.download({'provider': 'opensubtitles', 'file_id': 5}, target, 'key', 'user', 'password')
             self.assertEqual(target.read_bytes(), content)
+
+    def test_opensubtitles_download_sends_user_agent(self):
+        content = b'1\n00:00:01,000 --> 00:00:02,000\nHello\n'
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / 'movie.srt'
+            with patch('legenda.service.api', side_effect=[{'token': 'session'}, {'link': 'https://dl.opensubtitles.com/en/download/sub/1'}]), patch('urllib.request.urlopen', return_value=io.BytesIO(content)) as urlopen:
+                service.download({'provider': 'opensubtitles', 'file_id': 5}, target, 'key', 'user', 'password')
+            request = urlopen.call_args.args[0]
+            self.assertIn('LegendasLinux', request.get_header('User-agent'))
+
+    def test_opensubtitles_download_403_is_reported_clearly(self):
+        error = urllib.error.HTTPError('https://dl.opensubtitles.com/en/download/sub/1', 403, 'Forbidden', {}, None)
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / 'movie.srt'
+            with patch('legenda.service.api', side_effect=[{'token': 'session'}, {'link': 'https://dl.opensubtitles.com/en/download/sub/1'}]), patch('urllib.request.urlopen', side_effect=error):
+                with self.assertRaisesRegex(RuntimeError, 'HTTP 403'):
+                    service.download({'provider': 'opensubtitles', 'file_id': 5}, target, 'key', 'user', 'password')
+            self.assertFalse(target.exists())
 
     def test_insecure_link_rejected(self):
         with patch('legenda.service.api', side_effect=[{'token': 'session'}, {'link': 'http://example.org/sub'}]):

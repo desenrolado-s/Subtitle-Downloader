@@ -1,7 +1,8 @@
 """GUI-independent subtitle operations."""
+import urllib.error
 import urllib.parse
 import urllib.request
-from .provider import api
+from .provider import api, USER_AGENT
 from .files import movie_hash, save_subtitle
 from . import ajatt, gestdown, podnapisi, subtitulamos
 
@@ -42,6 +43,15 @@ def download(result, target, key='', user='', password=''):
     link = api('download', key, {'file_id': file_id, 'sub_format': 'srt'}, token)['link']
     if urllib.parse.urlparse(link).scheme != 'https':
         raise ValueError('Link de download inválido.')
-    with urllib.request.urlopen(link, timeout=60) as response:
-        content = response.read(10 * 1024 * 1024 + 1)
+    # The OpenSubtitles CDN rejects Python's default urllib user agent with 403.
+    request = urllib.request.Request(link, headers={'User-Agent': USER_AGENT, 'Accept': '*/*'})
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            content = response.read(10 * 1024 * 1024 + 1)
+    except urllib.error.HTTPError as error:
+        if error.code == 403:
+            raise RuntimeError('O OpenSubtitles recusou o download (HTTP 403). Tente novamente mais tarde.') from None
+        raise RuntimeError(f'OpenSubtitles retornou HTTP {error.code} ao baixar a legenda.') from None
+    except (urllib.error.URLError, TimeoutError):
+        raise RuntimeError('Não foi possível baixar a legenda do OpenSubtitles. Confira a internet e tente novamente.') from None
     return save_subtitle(target, content)
