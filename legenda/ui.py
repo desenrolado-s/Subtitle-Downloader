@@ -54,18 +54,19 @@ from gi.repository import Gtk, Gdk, GLib
 from . import service, credentials
 
 CSS = '''
-window { background: #111315; color: #f4f4f0; }
-headerbar { background: #111315; box-shadow: none; border-bottom: 1px solid #777; }
-button, entry { border-radius: 0; border: 1px solid #aaa; padding: 10px 14px; background: transparent; color: #f4f4f0; }
-button:hover { background: #34383c; }
-button.primary { background: #eee; color: #111; }
-.title { font-size: 32px; font-weight: bold; }
-.muted { color: #a7adb2; }
+window { background: #17181b; color: #ececf0; }
+headerbar { background: #17181b; box-shadow: none; border-bottom: 1px solid #292b30; }
+button, entry { border-radius: 9px; border: 1px solid #35373d; padding: 10px 14px; background: #1d1f23; color: #ececf0; }
+entry { background: #1b1c20; }
+button:hover { background: #292b31; border-color: #484a52; }
+button.primary { background: #ded8ee; color: #24212c; border-color: #ded8ee; }
+button.primary:hover { background: #eee9f8; }
+.muted { color: #a2a4ad; }
 list { background: transparent; }
-row { padding: 16px; border-bottom: 1px solid #444; }
-row:selected { background: #353b41; }
-scrolledwindow overshoot.top { background-image: radial-gradient(ellipse at center top, alpha(#f4f4f0, 0.22), transparent); }
-scrolledwindow overshoot.bottom { background-image: radial-gradient(ellipse at center bottom, alpha(#f4f4f0, 0.22), transparent); }
+row { padding: 12px 14px; border-bottom: 1px solid #292b30; }
+row:selected { background: #302d39; }
+scrolledwindow overshoot.top { background-image: radial-gradient(ellipse at center top, alpha(#ded8ee, 0.12), transparent); }
+scrolledwindow overshoot.bottom { background-image: radial-gradient(ellipse at center bottom, alpha(#ded8ee, 0.12), transparent); }
 '''
 
 def _load_css(provider, css_data):
@@ -102,12 +103,10 @@ class App(Gtk.Application):
         header = Gtk.HeaderBar()
         header.pack_end(self.button('Conta', self.settings))
         self.window.set_titlebar(header)
-        self.body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
+        self.body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
         for side in ('top', 'bottom', 'start', 'end'):
-            getattr(self.body, 'set_margin_' + side)(28)
+            getattr(self.body, 'set_margin_' + side)(24)
         self.window.set_child(self.body)
-        self.body.append(self.label('Encontre a legenda certa.', 'title'))
-        self.body.append(self.label('Podnapisi busca filmes e séries em vários idiomas sem chave. Gestdown/Subtitulamos.tv pedem S01E02; AJATT atende anime em japonês.', 'muted'))
         self.query = Gtk.Entry(placeholder_text='Nome do filme ou série')
         self.query.connect('activate', lambda _: self.search())
         self.body.append(self.query)
