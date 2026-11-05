@@ -1,6 +1,9 @@
 """GTK integration checks; run with a graphical display or xvfb-run."""
+import os
 import sys
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -10,13 +13,29 @@ if sys.platform == 'win32':
     raise unittest.SkipTest('GTK integration tests require an interactive Windows desktop')
 
 try:
-    from legenda.ui import App, Gtk, Gdk
+    from legenda.ui import App, Gtk, Gdk, _use_host_glib_data
 except ModuleNotFoundError as error:
     if error.name != 'gi':
         raise
     raise unittest.SkipTest('GTK integration tests require PyGObject')
 
 Gtk.init()
+
+class GlibDataTests(unittest.TestCase):
+    def test_frozen_bundle_stops_shadowing_host_schemas(self):
+        with tempfile.TemporaryDirectory() as directory:
+            bundle_share = str(Path(directory) / 'share')
+            with patch('legenda.ui.sys.frozen', True, create=True), \
+                 patch('legenda.ui.sys.platform', 'linux'), \
+                 patch('legenda.ui.sys._MEIPASS', directory, create=True), \
+                 patch.dict(os.environ, {'XDG_DATA_DIRS': os.pathsep.join([bundle_share, '/usr/share'])}, clear=True):
+                _use_host_glib_data()
+                self.assertEqual(os.environ['XDG_DATA_DIRS'], '/usr/share')
+
+    def test_non_frozen_process_keeps_xdg_data_dirs(self):
+        with patch.dict(os.environ, {'XDG_DATA_DIRS': '/custom/share'}, clear=True):
+            _use_host_glib_data()
+            self.assertEqual(os.environ['XDG_DATA_DIRS'], '/custom/share')
 
 @unittest.skipUnless(Gdk.Display.get_default(), 'Requires a graphical display')
 class GtkTests(unittest.TestCase):
