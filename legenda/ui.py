@@ -181,7 +181,7 @@ class App(Gtk.Application):
         # that schema does not contain the `view-type` key expected by GTK,
         # and opening the native dialog aborts the whole process. Gtk.FileDialog
         # uses the newer GTK 4.10 API and avoids that schema lookup.
-        if hasattr(Gtk, 'FileDialog'):
+        if Gtk.get_minor_version() >= 10 and hasattr(Gtk, 'FileDialog'):
             dialog = Gtk.FileDialog.new()
             dialog.set_title('Salvar legenda' if save else 'Selecionar vídeo')
             if save:
