@@ -1,8 +1,15 @@
 [Desktop Entry]
 Type=Application
 Name=Legenda
-Comment=Search and download subtitles
+GenericName=Subtitle Downloader
+GenericName[pt_BR]=Baixador de Legendas
+Comment=Search and download subtitles for movies and TV shows
+Comment[pt_BR]=Busque e baixe legendas de filmes e séries
 Exec=Legenda
 Icon=legenda
 Terminal=false
 Categories=AudioVideo;Video;
+Keywords=subtitle;subtitles;movie;tv;series;legenda;legendas;filme;serie;
+X-AppImage-Name=Legenda
+X-AppImage-Version=@APPIMAGE_VERSION@
+X-AppImage-Arch=@APPIMAGE_ARCH@
