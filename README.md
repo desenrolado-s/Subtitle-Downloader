@@ -128,7 +128,7 @@ A disponibilidade, a sincronização e os limites diários dependem do catálogo
 | `legenda/ajatt.py` | Catálogo AJATT/Kitsunekko de legendas japonesas para anime, sem chave de API. |
 | `legenda/files.py` | Hash do vídeo, validação do SRT e gravação atômica. |
 | `legenda/credentials.py` | Leitura e gravação das credenciais no cofre seguro do sistema. |
-| `test_*.py` | Testes de arquivos, API, serviço, credenciais e interface GTK. |
+| `tests/test_*.py` | Testes de arquivos, API, serviço, credenciais e interface GTK. |
 | `packaging/linux/` | Arquivo `.desktop` e ícones do aplicativo. |
 | `scripts/build-appimage.sh` | Empacotamento do AppImage. |
 | `.github/workflows/build.yml` | Testes, builds de Linux/macOS e publicação de releases. |
