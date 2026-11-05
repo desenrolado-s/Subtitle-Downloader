@@ -17,9 +17,15 @@ rm -rf build/Legenda.AppDir/usr/Legenda/_internal/gio_modules build/Legenda.AppD
 # host's GLib schemas can be older than the target system's GTK and make GTK's
 # file chooser abort, so always use the schemas installed on the host.
 rm -rf build/Legenda.AppDir/usr/Legenda/_internal/share/glib-2.0/schemas
-# AppImage Manager reads this AppImage-specific desktop entry to display the version.
+# AppImage Manager reads this AppImage-specific desktop entry to display the
+# version and other metadata. Strip the tag prefix because the manager already
+# renders versions as "v{version}".
 APPIMAGE_VERSION=${APPIMAGE_VERSION:-$(git describe --tags --always 2>/dev/null || printf '0.0.0')}
-sed "s/^Categories=/X-AppImage-Version=${APPIMAGE_VERSION}\\nCategories=/" packaging/linux/legenda.desktop > build/Legenda.AppDir/legenda.desktop
+APPIMAGE_VERSION=${APPIMAGE_VERSION#v}
+APPIMAGE_ARCH=${APPIMAGE_ARCH:-x86_64}
+sed -e "s|@APPIMAGE_VERSION@|${APPIMAGE_VERSION}|" \
+    -e "s|@APPIMAGE_ARCH@|${APPIMAGE_ARCH}|" \
+    packaging/linux/legenda.desktop > build/Legenda.AppDir/legenda.desktop
 cp packaging/linux/legenda.png build/Legenda.AppDir/
 cp packaging/linux/legenda.png build/Legenda.AppDir/.DirIcon
 test -s build/Legenda.AppDir/legenda.png

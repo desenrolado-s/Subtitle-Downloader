@@ -131,6 +131,7 @@ A disponibilidade, a sincronização e os limites diários dependem do catálogo
 | `test_*.py` | Testes de arquivos, API, serviço, credenciais e interface GTK. |
 | `packaging/linux/` | Arquivo `.desktop` e ícones do aplicativo. |
 | `scripts/build-appimage.sh` | Empacotamento do AppImage. |
+| `scripts/next-version.sh` | Cálculo da próxima versão de release. |
 | `.github/workflows/build.yml` | Testes, builds de Linux/macOS e publicação de releases. |
 | `.github/workflows/gtk.yml` | Validação da interface GTK e do AppImage no GitHub Actions. |
 
@@ -173,7 +174,7 @@ bash scripts/build-appimage.sh
 
 O script produz `Legenda-linux-x64.AppImage` e baixa a versão `continuous` do `appimagetool`, que não é fixada por hash. O workflow `gtk.yml` executa os testes, empacota o aplicativo, testa o binário e publica o artefato `Legenda-GTK-linux-x64.AppImage`.
 
-O workflow `build.yml` executa os testes e empacota Linux x64, macOS ARM64 e Windows x64. Tags `v*` publicam os pacotes em uma GitHub Release.
+O workflow `build.yml` executa os testes e empacota Linux x64, macOS ARM64 e Windows x64. A cada push na `main`, ele calcula a próxima versão automaticamente (`2.0.8` → `2.0.9`, `2.0.9` → `2.1.0`, `2.9.9` → `3.0.0`), cria a tag `v*` e publica a GitHub Release. Tags `v*` enviadas manualmente também publicam os pacotes.
 
 Os nomes dos arquivos publicados incluem a tag da release, por exemplo `Legenda-linux-x64-v2.0.3.AppImage`. O link direto da release mais recente também usa esse nome:
 
