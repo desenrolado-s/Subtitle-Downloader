@@ -41,3 +41,34 @@ for name in "${required[@]}"; do
     exit 1
   fi
 done
+
+# The Linux build runs on Ubuntu 22.04, whose GTK 4.6 typelib predates
+# Gtk.FileDialog (added in GTK 4.10). Bundle newer introspection metadata
+# while continuing to use the host GTK libraries at runtime. This lets newer
+# distributions use Gtk.FileDialog without shipping GTK shared libraries.
+gtk_typelib_version=4.14.5+ds-0ubuntu0.10
+gtk_typelib_package="gir1.2-gtk-4.0_${gtk_typelib_version}_amd64.deb"
+gtk_typelib_url="https://archive.ubuntu.com/ubuntu/pool/main/g/gtk4/${gtk_typelib_package}"
+gtk_typelib_sha256=027a65ddf6a652b92ca746d2f9b5f80178df0fc3d7f29a84115a5640f1dddc45
+gtk_typelib_cache="build/gtk-typelibs-${gtk_typelib_version}"
+gtk_typelib_archive="$gtk_typelib_cache/$gtk_typelib_package"
+gtk_typelib_root="$gtk_typelib_cache/root"
+if [ ! -s "$gtk_typelib_archive" ]; then
+  mkdir -p "$gtk_typelib_cache"
+  curl --fail --location --retry 3 "$gtk_typelib_url" --output "$gtk_typelib_archive"
+fi
+printf '%s  %s\n' "$gtk_typelib_sha256" "$gtk_typelib_archive" | sha256sum --check --status
+if [ ! -d "$gtk_typelib_root" ]; then
+  mkdir -p "$gtk_typelib_root"
+  dpkg-deb --extract "$gtk_typelib_archive" "$gtk_typelib_root"
+fi
+for name in Gtk-4.0 Gdk-4.0 Gsk-4.0 GdkWayland-4.0 GdkX11-4.0; do
+  newer_typelib="$gtk_typelib_root/usr/lib/x86_64-linux-gnu/girepository-1.0/$name.typelib"
+  if [ -s "$newer_typelib" ]; then
+    cp -f "$newer_typelib" "$dest/$name.typelib"
+  fi
+done
+if ! strings "$dest/Gtk-4.0.typelib" | grep -qx 'GtkFileDialog'; then
+  echo 'Bundled Gtk-4.0 typelib does not expose Gtk.FileDialog.' >&2
+  exit 1
+fi
