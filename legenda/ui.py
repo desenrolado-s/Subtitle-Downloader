@@ -6,13 +6,41 @@ import threading
 from pathlib import Path
 
 _bundled_typelibs = Path(getattr(sys, '_MEIPASS', '')) / 'gi_typelibs'
-_typelib_paths = [str(_bundled_typelibs)] if _bundled_typelibs.is_dir() else []
-_typelib_paths.extend(('/usr/lib64/girepository-1.0', '/usr/lib/girepository-1.0', '/usr/lib/x86_64-linux-gnu/girepository-1.0'))
+# The frozen Linux build runs against the host GTK/GLib stack. Prefer the
+# host typelibs and keep the bundled ones as a fallback for distributions
+# that ship the typelibs in a separate package (for example openSUSE).
+_typelib_paths = ('/usr/lib64/girepository-1.0', '/usr/lib/girepository-1.0', '/usr/lib/x86_64-linux-gnu/girepository-1.0', str(_bundled_typelibs))
+_env_typelibs = [path for path in os.environ.get('GI_TYPELIB_PATH', '').split(os.pathsep) if path]
 for _path in _typelib_paths:
-    if os.path.isdir(_path):
-        _current = os.environ.get('GI_TYPELIB_PATH', '')
-        if _path not in _current.split(os.pathsep):
-            os.environ['GI_TYPELIB_PATH'] = f'{_path}{os.pathsep}{_current}' if _current else _path
+    if os.path.isdir(_path) and _path not in _env_typelibs:
+        _env_typelibs.append(_path)
+if _env_typelibs:
+    os.environ['GI_TYPELIB_PATH'] = os.pathsep.join(_env_typelibs)
+
+def _use_host_glib_data():
+    """Keep build-host GLib data from shadowing the system GTK stack.
+
+    PyInstaller prepends the bundle's ``share`` directory to
+    ``XDG_DATA_DIRS``.  A frozen Linux build uses the host GTK/GLib libraries,
+    so a ``gschemas.compiled`` from the build host can be older than the
+    installed GTK.  GTK then aborts when it looks up a settings key that is
+    missing from the bundled schema (``view-type`` on openSUSE Tumbleweed,
+    for example).  Dropping the bundled directory makes GLib fall back to the
+    system schemas, which match the GTK version in use.
+    """
+    if not (sys.platform.startswith('linux') and getattr(sys, 'frozen', False)):
+        return
+    share = os.path.normpath(os.path.join(getattr(sys, '_MEIPASS', ''), 'share'))
+    data_dirs = [os.path.normpath(path) for path in os.environ.get('XDG_DATA_DIRS', '').split(os.pathsep) if path]
+    if share not in data_dirs:
+        return
+    data_dirs = [path for path in data_dirs if path != share]
+    if data_dirs:
+        os.environ['XDG_DATA_DIRS'] = os.pathsep.join(data_dirs)
+    else:
+        os.environ.pop('XDG_DATA_DIRS', None)
+
+_use_host_glib_data()
 
 if getattr(sys, 'frozen', False) and sys.platform == 'win32':
     _bundled_dll_dir = str(Path(sys._MEIPASS))
@@ -176,12 +204,12 @@ class App(Gtk.Application):
             self.account_status.set_text('Credenciais removidas do cofre e desta sessão.')
 
     def chooser(self, save, callback):
-        # Gtk.FileChooserNative relies on the legacy file chooser settings
-        # schema. On some newer distributions (including openSUSE Tumbleweed)
-        # that schema does not contain the `view-type` key expected by GTK,
-        # and opening the native dialog aborts the whole process. Gtk.FileDialog
-        # uses the newer GTK 4.10 API and avoids that schema lookup.
-        if Gtk.get_minor_version() >= 10 and hasattr(Gtk, 'FileDialog'):
+        # Both Gtk.FileChooserNative and Gtk.FileDialog read the file chooser
+        # settings schema. A schema bundled by PyInstaller from the build host
+        # can be older than the installed GTK and miss keys such as `view-type`,
+        # which aborts the whole process. The bundle cleanup above keeps the
+        # system schema in use; Gtk.FileDialog is still preferred on GTK 4.10+.
+        if hasattr(Gtk, 'FileDialog') and (Gtk.get_major_version(), Gtk.get_minor_version()) >= (4, 10):
             dialog = Gtk.FileDialog.new()
             dialog.set_title('Salvar legenda' if save else 'Selecionar vídeo')
             if save:

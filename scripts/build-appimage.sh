@@ -13,6 +13,10 @@ bash scripts/bundle-gtk-typelibs.sh build/Legenda.AppDir/usr/Legenda/_internal/g
 # libraries makes the AppImage incompatible with newer distributions.
 find build/Legenda.AppDir \( -name "libglib-2.0.so*" -o -name "libgobject-2.0.so*" -o -name "libgio-2.0.so*" -o -name "libgmodule-2.0.so*" -o -name "libgirepository-*.so*" -o -name "libmount.so*" -o -name "libblkid.so*" -o -name "libuuid.so*" -o -name "libsystemd.so*" -o -name "libudev.so*" \) -delete
 rm -rf build/Legenda.AppDir/usr/Legenda/_internal/gio_modules build/Legenda.AppDir/usr/Legenda/gio_modules
+# PyInstaller adds the bundle's share directory to XDG_DATA_DIRS. The build
+# host's GLib schemas can be older than the target system's GTK and make GTK's
+# file chooser abort, so always use the schemas installed on the host.
+rm -rf build/Legenda.AppDir/usr/Legenda/_internal/share/glib-2.0/schemas
 # AppImage Manager reads this AppImage-specific desktop entry to display the version.
 APPIMAGE_VERSION=${APPIMAGE_VERSION:-$(git describe --tags --always 2>/dev/null || printf '0.0.0')}
 sed "s/^Categories=/X-AppImage-Version=${APPIMAGE_VERSION}\\nCategories=/" packaging/linux/legenda.desktop > build/Legenda.AppDir/legenda.desktop
