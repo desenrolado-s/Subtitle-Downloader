@@ -4,9 +4,10 @@ import urllib.request
 import urllib.error
 
 BASE = "https://api.opensubtitles.com/api/v1/"
+USER_AGENT = 'LegendasLinux v1.0'
 
 def api(route, key, payload=None, token=''):
-    headers = {'Api-Key': key, 'User-Agent': 'LegendasLinux v1.0', 'Accept': 'application/json'}
+    headers = {'Api-Key': key, 'User-Agent': USER_AGENT, 'Accept': 'application/json'}
     if token:
         headers['Authorization'] = 'Bearer ' + token
     data = None
